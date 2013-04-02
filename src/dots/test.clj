@@ -14,9 +14,8 @@
 
 (defn- add-edge-to-field-graph
   "Add new edge to the game field"
-  [field vertex1 vertex2]
-  (let [new-edge (list vertex1 vertex2)
-        edges (get field :edges )]
+  [edges vertex1 vertex2]
+  (let [new-edge (list vertex1 vertex2)]
     ;add edge to underlying data map using both vertices of the edge as keys
     ;reduce over list of vertices (i.e. new-edge) with data map as initial value
     ;for reduction call a partial application of a function(put-edge) that will add new-edge to a map(%1) under a key(%2)(vertex from new-edge)
@@ -24,7 +23,8 @@
     ))
 
 (defn- valid-new-dot?
-  "Check if new dot with specified coordinates can be added to the field"
+  "Check if new dot with specified coordinates
+  can be added to the field"
   [field x y]
   (let [data (get field :edges )
         width (get-in field [:size :width ])
@@ -37,19 +37,26 @@
       )
     ))
 
-(defn try-add-edge [field vertex1 vertex2]
-  (let [data (get field :edges )]
-    (if (contains? data vertex2)
-      (add-edge-to-field-graph field vertex1 vertex2)
+(defn- try-add-edge
+  "Check if edges map contains second vertex
+  and add the edge between the two"
+  [edges vertex1 vertex2]
+  (let [edges (get field :edges )]
+    (if (contains? edges vertex2)
+      (add-edge-to-field-graph edges vertex1 vertex2)
       field)
     ))
 
-(defn put-dot [field x y]
+(defn put-dot
+  "Add a new dot with specified coordinates(1-based,
+  x: left to right, y: bottom to top) to the field,
+  and try to add edges to dots around."
+  [field x y]
   (if (valid-new-dot? field x y)
     ;add four edges to field, connecting new dot with existing dots
     (let [destination-dots (list {:x (- x 1) :y y} {:x (+ x 1) :y y} {:x x :y (- y 1)} {:x x :y (+ y 1)}) ;dot left, dot right, dot bottom, dot top
           field-with-new-dot (assoc-in field [:edges {:x x :y y}] '())]
-      (reduce #(try-add-edge %1 {:x x :y y} %2) field-with-new-dot destination-dots))
+      (reduce #(try-add-edge %1 {:x x :y y} %2) (:edges field-with-new-dot) destination-dots))
     field
     ))
 
