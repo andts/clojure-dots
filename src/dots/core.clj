@@ -1,5 +1,5 @@
-(ns dots.test
-  [:require [dots.util :as util] [clojure.pprint]])
+(ns dots.core
+  (:require [dots.util :as util] [clojure.pprint]))
 
 (def test-field {:size {:width 5 :height 5}
                  ;map vertex to list of edges it is included in
@@ -19,7 +19,7 @@
     ;add edge to underlying data map using both vertices of the edge as keys
     ;reduce over list of vertices (i.e. new-edge) with data map as initial value
     ;for reduction call a partial application of a function(put-edge) that will add new-edge to a map(%1) under a key(%2)(vertex from new-edge)
-    (assoc field :edges (reduce #(put-edge %1 %2 new-edge) edges new-edge))
+    (reduce #(put-edge %1 %2 new-edge) edges new-edge)
     ))
 
 (defn- valid-new-dot?
@@ -33,19 +33,16 @@
       (contains? data {:x x :y y}) false
       (or (> x width) (< x 1)) false
       (or (> y height) (< y 1)) false
-      :else true
-      )
+      :else true)
     ))
 
 (defn- try-add-edge
   "Check if edges map contains second vertex
   and add the edge between the two"
   [edges vertex1 vertex2]
-  (let [edges (get field :edges )]
-    (if (contains? edges vertex2)
-      (add-edge-to-field-graph edges vertex1 vertex2)
-      field)
-    ))
+  (if (contains? edges vertex2)
+    (add-edge-to-field-graph edges vertex1 vertex2)
+    edges))
 
 (defn put-dot
   "Add a new dot with specified coordinates(1-based,
@@ -56,8 +53,7 @@
     ;add four edges to field, connecting new dot with existing dots
     (let [destination-dots (list {:x (- x 1) :y y} {:x (+ x 1) :y y} {:x x :y (- y 1)} {:x x :y (+ y 1)}) ;dot left, dot right, dot bottom, dot top
           field-with-new-dot (assoc-in field [:edges {:x x :y y}] '())]
-      (reduce #(try-add-edge %1 {:x x :y y} %2) (:edges field-with-new-dot) destination-dots))
-    field
-    ))
+      (assoc field-with-new-dot :edges (reduce #(try-add-edge %1 {:x x :y y} %2) (:edges field-with-new-dot) destination-dots)))
+    field))
 
-(clojure.pprint/pprint (put-dot (put-dot test-field 1 2) 8 2))
+;(clojure.pprint/pprint (put-dot (put-dot test-field 1 2) 8 2))
