@@ -8,4 +8,4 @@
                                               javax.jms/jms
                                               com.sun.jdmk/jmxtools
                                               com.sun.jmx/jmxri]]]
-  :main dots.test)
+  :main dots.core)
