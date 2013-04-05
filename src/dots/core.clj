@@ -1,10 +1,12 @@
 (ns dots.core
-  (:require [dots.util :as util] [clojure.pprint]))
+  (:require [dots.util :as util]
+            [clojure.pprint]))
 
 (def test-field {:size {:width 5 :height 5}
                  ;map vertex to list of edges it is included in
-                 :edges {{:x 1 :y 1} '(({:x 1 :y 1} {:x 2 :y 2}))
-                         {:x 2 :y 2} '(({:x 1 :y 1} {:x 2 :y 2}))}
+                 :edges {1 '(1 2)}
+                 :dots {1 {:x 1 :y 1 :edges '(1)}
+                        2 {:x 2 :y 2 :edges '(1)}}
                  })
 
 (defn- put-edge
@@ -56,4 +58,4 @@
       (assoc field-with-new-dot :edges (reduce #(try-add-edge %1 {:x x :y y} %2) (:edges field-with-new-dot) destination-dots)))
     field))
 
-;(clojure.pprint/pprint (put-dot (put-dot test-field 1 2) 8 2))
+(clojure.pprint/pprint (put-dot (put-dot test-field 1 2) 8 2))
