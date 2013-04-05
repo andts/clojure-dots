@@ -31,9 +31,11 @@
     ;add edge to underlying data map using both vertices of the edge as keys
     ;reduce over list of vertices (i.e. new-edge) with data map as initial value
     ;for reduction call a function(put-edge) that will add new-edge to a map(%1) under a key(%2)(vertex from new-edge)
-    (reduce #(add-edge-to-adjacent-dots %1 %2 new-edge-id) field-with-new-edge new-edge)))
+    (reduce #(add-edge-to-adjacent-dots %1 %2 new-edge-id) field-with-new-edge new-edge)
+    ))
 
 (defn- add-edges-to-field
+  "Add edges from source vertex to all destination vertices"
   [field source-vertex destination-vertices]
   (reduce #(add-edge-to-field %1 source-vertex %2) field destination-vertices))
 
@@ -47,14 +49,15 @@
         width (get-in field [:size :width ])
         height (get-in field [:size :height ])]
     (cond
-      (contains? field-map [x y]) false
-      (or (> x width) (< x 1)) false
-      (or (> y height) (< y 1)) false
+      (and (contains? :id dot) (contains? (:dots field))) false ;dot has id set and a dot with same id already stored in field
+      (contains? field-map [x y]) false ;a dot with same coordinates exists
+      (or (> x width) (< x 1)) false ;dot is out of field
+      (or (> y height) (< y 1)) false ;dot is out of field
       :else true)
     ))
 
 (defn- get-neighbour-dots
-  "Return coordinates of all neighbour dots"
+  "Return coordinates of all neighbour dots that have same colour"
   [field dot]
   (let [x (:x dot)
         y (:y dot)
@@ -65,7 +68,8 @@
                (contains? field-map %1)
                (let [dest-dot-id (field-map %1)
                      dest-dot ((:dots field) dest-dot-id)]
-                 (= (dot :type ) (dest-dot :type ))))
+                 (= (dot :type ) (dest-dot :type ))
+                 ))
       neighbour-coords)
     ))
 

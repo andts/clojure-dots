@@ -31,5 +31,5 @@
   (let [query-result (first (k/select games (k/with fields (k/with dots)) (k/where {:games.game-id game-id})))
         field-size {:width (:width query-result) :height (:height query-result)}
         game-field {:size field-size :edges {}}]
-    (reduce #(field/put-dot %1 {:x (:x %2) :y (:y %2) :type :red}) game-field (:dots query-result))
+    (reduce #(field/put-dot %1 {:x (:x %2) :y (:y %2) :type (keyword (:type %2))}) game-field (:dots query-result))
     ))
