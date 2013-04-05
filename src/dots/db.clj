@@ -1,7 +1,7 @@
 (ns dots.db
   (:require [korma.core :as k]
             [korma.db :as db]
-            [dots.core]
+            [dots.field :as field]
             [clojure.pprint]
             ))
 
@@ -30,6 +30,6 @@
   [game-id]
   (let [query-result (first (k/select games (k/with fields (k/with dots)) (k/where {:games.game-id game-id})))
         field-size {:width (:width query-result) :height (:height query-result)}
-        field {:size field-size :edges {}}]
-    (reduce #(dots.core/put-dot %1 (:x %2) (:y %2)) field (:dots query-result))
+        game-field {:size field-size :edges {}}]
+    (reduce #(field/put-dot %1 {:x (:x %2) :y (:y %2) :type :red}) game-field (:dots query-result))
     ))
