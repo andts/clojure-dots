@@ -28,9 +28,6 @@
         new-edge (list vertex1-id vertex2-id)
         new-edge-id (util/get-next-index (:edges field))
         field-with-new-edge (assoc-in field [:edges new-edge-id] new-edge)]
-    ;add edge to underlying data map using both vertices of the edge as keys
-    ;reduce over list of vertices (i.e. new-edge) with data map as initial value
-    ;for reduction call a function(put-edge) that will add new-edge to a map(%1) under a key(%2)(vertex from new-edge)
     (reduce #(add-edge-to-adjacent-dots %1 %2 new-edge-id) field-with-new-edge new-edge)
     ))
 
@@ -40,8 +37,7 @@
   (reduce #(add-edge-to-field %1 source-vertex %2) field destination-vertices))
 
 (defn- valid-new-dot?
-  "Check if new dot with specified coordinates
-  can be added to the field"
+  "Check if a dot can be added to the field"
   [field dot]
   (let [x (:x dot)
         y (:y dot)
@@ -49,7 +45,7 @@
         width (get-in field [:size :width ])
         height (get-in field [:size :height ])]
     (cond
-      (and (contains? :id dot) (contains? (:dots field))) false ;dot has id set and a dot with same id already stored in field
+      (and (contains? dot :id) (contains? (:dots field) (:id dot))) false ;dot has id set and a dot with same id already stored in field
       (contains? field-map [x y]) false ;a dot with same coordinates exists
       (or (> x width) (< x 1)) false ;dot is out of field
       (or (> y height) (< y 1)) false ;dot is out of field
@@ -84,14 +80,8 @@
           y (:y dot)
           destination-dots (get-neighbour-dots field dot)
           dot-index (util/get-next-index (:dots field))]
-      (clojure.pprint/pprint destination-dots)
       (-> field
-        (assoc-in [:dots dot-index] dot)
+        (assoc-in [:dots dot-index] (assoc dot :fresh true))
         (assoc-in [:field-map [x y]] dot-index)
         (add-edges-to-field [x y] destination-dots))
       )))
-
-(clojure.pprint/pprint (-> test-field
-                         (put-dot {:x 2 :y 2 :type :red})
-                         (put-dot {:x 2 :y 1 :type :red})
-                         ))
