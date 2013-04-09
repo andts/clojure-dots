@@ -23,7 +23,3 @@
   (let [game (get @games game-id)]
     (field/put-dot (:field game) {:x x :y y :type (get game player)})
     ))
-
-(clojure.pprint/pprint (create-game 10 11 5 5))
-(clojure.pprint/pprint (create-game 12 14 2 2))
-(clojure.pprint/pprint @games)
