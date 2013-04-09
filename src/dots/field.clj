@@ -45,7 +45,7 @@
         width (get-in field [:size :width ])
         height (get-in field [:size :height ])]
     (cond
-      (and (contains? dot :id) (contains? (:dots field) (:id dot))) false ;dot has id set and a dot with same id already stored in field
+      (and (contains? dot :id ) (contains? (:dots field) (:id dot))) false ;dot has id set and a dot with same id already stored in field
       (contains? field-map [x y]) false ;a dot with same coordinates exists
       (or (> x width) (< x 1)) false ;dot is out of field
       (or (> y height) (< y 1)) false ;dot is out of field
@@ -81,7 +81,7 @@
           destination-dots (get-neighbour-dots field dot)
           dot-index (util/get-next-index (:dots field))]
       (-> field
-        (assoc-in [:dots dot-index] (assoc dot :fresh true))
+        (assoc-in [:dots dot-index] dot)
         (assoc-in [:field-map [x y]] dot-index)
         (add-edges-to-field [x y] destination-dots))
       )))

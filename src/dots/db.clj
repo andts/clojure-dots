@@ -34,16 +34,18 @@
     (reduce #(field/put-dot %1 {:x (:x %2) :y (:y %2) :type (keyword (:type %2))}) game-field (:dots query-result))
     ))
 
-(defn- create-game-placeholder
+(defn create-game
   [player1 player2]
   (k/insert games (k/values {:player1-id player1 :player2-id player2})))
 
 (defn- save-dot
   [field dot]
-  (if (:fresh dot)
-    (update-in field [:dots ()])
-    field)
-  )
+  (k/insert dots
+    (k/modifier "IGNORE")
+    (k/values {:dot-id (:dot-id dot)
+               :field-id (:field-id field)
+               :x (:x dot) :y (:y dot)
+               :type (name (:type dot))})))
 
 (defn- save-game-field
   [field game-id]
