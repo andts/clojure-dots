@@ -11,6 +11,10 @@
                         :user "sysadm"
                         :password "netcracker"}))
 
+(k/defentity players
+  (k/pk :player-id )
+  (k/entity-fields :name ))
+
 (k/defentity dots
   (k/pk :dot-id )
   (k/entity-fields :x :y :type ))
@@ -23,7 +27,9 @@
 (k/defentity games
   (k/pk :game-id )
   (k/entity-fields :player1-id :player2-id )
-  (k/has-one fields {:fk :game-id}))
+  (k/has-one fields {:fk :game-id})
+  (k/belongs-to players (:fk :player1-id ))
+  (k/belongs-to players (:fk :player2-id )))
 
 (defn load-game-field
   "Get game field by game id"
@@ -58,3 +64,15 @@
 (defn save-game
   [game]
   (assoc game :field (save-game-field (:field game) (:game-id game))))
+
+(defn create-player
+  "Create new player"
+  [player]
+  (k/insert players
+    (k/values {:name (:name player)})))
+
+(defn update-player
+  "Update existing player"
+  [player]
+  (k/update players
+    (k/values {:player-id (:id player) :name (:name player)})))

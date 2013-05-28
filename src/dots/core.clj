@@ -5,6 +5,7 @@
             [clojure.pprint]))
 
 (def games (ref {}))
+(def players (ref {}))
 
 (defn create-game
   [player1 player2 width height]
@@ -12,7 +13,8 @@
               player1 :red
               player2 :blue
               :field {:size {:width width
-                             :height height}}}]
+                             :height height}
+                      }}]
     (dosync
       (ref-set games (assoc @games (:game-id game) game)))
     game
@@ -27,3 +29,22 @@
       (ref-set games (assoc @games (:game-id new-game) new-game)))
     new-game
     ))
+
+(defn create-player
+  "Create new player"
+  [name]
+  (let [player {:name name}
+        created-player (assoc player :id (:GENERATED_KEY (db/create-player player)))]
+    (dosync
+      (ref-set players (assoc @players (:id created-player) created-player)))
+    created-player
+    ))
+
+(defn update-player
+  [player]
+  (dosync
+    (db/update-player player)
+    (ref-set players (assoc @players (:id player) player))
+    player
+    ))
+
