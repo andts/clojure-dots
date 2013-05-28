@@ -1,6 +1,5 @@
 (ns dots.field
-  (:require [clojure.pprint]
-            [dots.util :as util]))
+  (:require [dots.util :as util]))
 
 (def test-field {:size {:width 5 :height 5}
                  ;map edge id to edge data

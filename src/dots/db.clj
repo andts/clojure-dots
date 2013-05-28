@@ -1,9 +1,7 @@
 (ns dots.db
   (:require [korma.core :as k]
             [korma.db :as db]
-            [dots.field :as field]
-            [clojure.pprint]
-            ))
+            [dots.field :as field]))
 
 (db/defdb db (db/mysql {:host "localhost"
                         :port "3306"
@@ -40,11 +38,8 @@
     (reduce #(field/put-dot %1 {:x (:x %2) :y (:y %2) :type (keyword (:type %2))}) game-field (:dots query-result))
     ))
 
-(defn create-game
-  [player1 player2]
-  (k/insert games (k/values {:player1-id player1 :player2-id player2})))
-
 (defn- save-dot
+  "Save dot in db, if it doesn't already exist"
   [field dot]
   (k/insert dots
     (k/modifier "IGNORE")
@@ -53,15 +48,27 @@
                :x (:x dot) :y (:y dot)
                :type (name (:type dot))})))
 
+(defn- create-game-field
+  [field game-id]
+  (let [new-field-id (:GENERATED_KEY (k/insert fields (k/values {:width (:width field) :height (:height field) :game-id game-id})))]
+    (assoc field :field-id new-field-id)
+    ))
+
 (defn- save-game-field
+  "Save game field in db"
   [field game-id]
   (let [saved-field (if (contains? field :field-id )
                       field
-                      (k/insert fields (k/values {:width (:width field) :height (:height field) :game-id game-id})))]
+                      (create-game-field field game-id))]
     (reduce save-dot saved-field (:dots saved-field))
     ))
 
+(defn create-game
+  [player1 player2]
+  (k/insert games (k/values {:player1-id player1 :player2-id player2})))
+
 (defn save-game
+  "Update game in db: save field, history, etc."
   [game]
   (assoc game :field (save-game-field (:field game) (:game-id game))))
 
@@ -71,7 +78,7 @@
   (k/insert players
     (k/values {:name (:name player)})))
 
-(defn update-player
+(defn save-player
   "Update existing player"
   [player]
   (k/update players

@@ -1,17 +1,16 @@
 (ns dots.core
   (:require [dots.util :as util]
             [dots.field :as field]
-            [dots.db :as db]
-            [clojure.pprint]))
+            [dots.db :as db]))
 
 (def games (ref {}))
 (def players (ref {}))
 
 (defn create-game
-  [player1 player2 width height]
-  (let [game {:game-id (:GENERATED_KEY (db/create-game player1 player2))
-              player1 :red
-              player2 :blue
+  [player1-id player2-id width height]
+  (let [game {:game-id (:GENERATED_KEY (db/create-game player1-id player2-id))
+              player1-id :red
+              player2-id :blue
               :field {:size {:width width
                              :height height}
                       }}]
@@ -43,7 +42,7 @@
 (defn update-player
   [player]
   (dosync
-    (db/update-player player)
+    (db/save-player player)
     (ref-set players (assoc @players (:id player) player))
     player
     ))
