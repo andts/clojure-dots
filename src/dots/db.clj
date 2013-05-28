@@ -6,8 +6,8 @@
 (db/defdb db (db/mysql {:host "localhost"
                         :port "3306"
                         :db "dots"
-                        :user "sysadm"
-                        :password "netcracker"}))
+                        :user "root"
+                        :password "root"}))
 
 (k/defentity players
   (k/pk :player-id )
@@ -46,11 +46,12 @@
     (k/values {:dot-id (:dot-id dot)
                :field-id (:field-id field)
                :x (:x dot) :y (:y dot)
-               :type (name (:type dot))})))
+               :type (name (:type dot))}
+      )))
 
 (defn- create-game-field
   [field game-id]
-  (let [new-field-id (:GENERATED_KEY (k/insert fields (k/values {:width (:width field) :height (:height field) :game-id game-id})))]
+  (let [new-field-id (:GENERATED_KEY (k/insert fields (k/values [{:width (:width field)} {:height (:height field)} {:game-id game-id}])))]
     (assoc field :field-id new-field-id)
     ))
 
@@ -82,4 +83,6 @@
   "Update existing player"
   [player]
   (k/update players
-    (k/values {:player-id (:id player) :name (:name player)})))
+    (k/set-fields {:name (:name player)})
+    (k/where (= :player-id (:id player)))
+    ))

@@ -9,6 +9,14 @@
   )
 
 (defn includes?
-  "Check if the collection contain an item"
+  "Check if collection coll contains the item"
   [coll item]
   (some #(= item %) coll))
+
+(defmacro try-run
+  "Assuming that the body of code returns X, this macro returns [X nil]
+  in the case of no error and [nil E] in event of an exception object E."
+  [& body]
+  `(try [(do ~@body) nil]
+     (catch Exception e#
+       [nil e#])))

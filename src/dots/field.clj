@@ -14,7 +14,7 @@
                  :cycles '()
                  })
 
-(defn- add-edge-to-adjacent-dots
+(defn- add-edge-to-adjacent-dot
   "Add edge to list of edges adjacent to a dot"
   [field dot-id edge-id]
   (update-in field [:dots dot-id :edges ] conj edge-id))
@@ -27,7 +27,7 @@
         new-edge (list vertex1-id vertex2-id)
         new-edge-id (util/get-next-index (:edges field))
         field-with-new-edge (assoc-in field [:edges new-edge-id] new-edge)]
-    (reduce #(add-edge-to-adjacent-dots %1 %2 new-edge-id) field-with-new-edge new-edge)
+    (reduce #(add-edge-to-adjacent-dot %1 %2 new-edge-id) field-with-new-edge new-edge)
     ))
 
 (defn- add-edges-to-field
@@ -44,10 +44,10 @@
         width (get-in field [:size :width ])
         height (get-in field [:size :height ])]
     (cond
-      (and (contains? dot :id ) (contains? (:dots field) (:id dot))) false ;dot has id set and a dot with same id already stored in field
-      (contains? field-map [x y]) false ;a dot with same coordinates exists
-      (or (> x width) (< x 1)) false ;dot is out of field
-      (or (> y height) (< y 1)) false ;dot is out of field
+      (and (contains? dot :id ) (contains? (:dots field) (:id dot))) (throw (IllegalArgumentException. "This dot already exists"));false ;dot has id set and a dot with same id already stored in field
+      (contains? field-map [x y]) (throw (IllegalArgumentException. "Dot with such coordinates already exists")) ;false ;a dot with same coordinates exists
+      (or (> x width) (< x 1)) (throw (IllegalArgumentException. "Dot x coord is out of field")) ;false ;dot is out of field
+      (or (> y height) (< y 1)) (throw (IllegalArgumentException. "Dot y coord is out of field")) ;false ;dot is out of field
       :else true)
     ))
 
@@ -62,7 +62,7 @@
     (filter #(and
                (contains? field-map %1)
                (let [dest-dot-id (field-map %1)
-                     dest-dot ((:dots field) dest-dot-id)]
+                     dest-dot (get (:dots field) dest-dot-id)]
                  (= (dot :type ) (dest-dot :type ))
                  ))
       neighbour-coords)
@@ -83,4 +83,6 @@
         (assoc-in [:dots dot-index] dot)
         (assoc-in [:field-map [x y]] dot-index)
         (add-edges-to-field [x y] destination-dots))
-      )))
+      )
+    field
+    ))

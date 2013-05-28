@@ -1,5 +1,9 @@
 First Simple Draft of Dots
+Functional:
 1. Two players, two types of dots - red and blue
 2. Fixed size field
 3. No cycles detection, no scoring, just dots
-4. Everything is stored in pg db
+4. Everything is stored in mysql db
+
+Technical:
+1. Try slingshot (https://github.com/scgilardi/slingshot) for exceptions?
