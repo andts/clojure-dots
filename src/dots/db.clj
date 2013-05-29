@@ -1,13 +1,16 @@
 (ns dots.db
   (:require [korma.core :as k]
             [korma.db :as db]
-            [dots.field :as field]))
+            [dots.field :as field]
+            [dots.util :as util]))
 
-(db/defdb db (db/mysql {:host "localhost"
-                        :port "3306"
+(def config (util/load-properties (clojure.java.io/resource "test.properties")))
+
+(db/defdb db (db/mysql {:host (:dots.db.host config)
+                        :port (:dots.db.port config)
                         :db "dots"
-                        :user "root"
-                        :password "root"}))
+                        :user (:dots.db.user config)
+                        :password (:dots.db.password config)}))
 
 (k/defentity players
   (k/pk :player-id )

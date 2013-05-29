@@ -20,3 +20,10 @@
   `(try [(do ~@body) nil]
      (catch Exception e#
        [nil e#])))
+
+(defn load-properties
+  [file-name]
+  (with-open [^java.io.Reader reader (clojure.java.io/reader file-name)]
+    (let [props (java.util.Properties.)]
+      (.load props reader)
+      (into {} (for [[k v] props] [(keyword k) (read-string v)])))))
