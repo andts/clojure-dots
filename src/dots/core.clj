@@ -21,7 +21,11 @@
 
 (defn save-game
   [game]
-  )
+  (let [saved-game (db/save-game game)]
+    (dosync
+      (ref-set games (assoc @games (:game-id saved-game) saved-game)))
+    saved-game
+    ))
 
 (defn load-game
   [game-id]
