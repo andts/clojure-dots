@@ -4,7 +4,7 @@
             [dots.field :as field]
             [dots.util :as util]))
 
-(def config (util/load-properties (clojure.java.io/resource "test.properties")))
+(def config (util/load-properties (clojure.java.io/resource "dots.properties")))
 
 (db/defdb db (db/mysql {:host (:dots.db.host config)
                         :port (:dots.db.port config)
@@ -43,11 +43,12 @@
 
 (defn- save-dot
   "Save dot in db, if it doesn't already exist"
-  [field dot]
-  (do
+  [field dot-entry]
+  (let [dot (second dot-entry)
+        dot-id (first dot-entry)]
     (k/insert dots
       (k/modifier "IGNORE")
-      (k/values {:dot-id (:dot-id dot)
+      (k/values {:dot-id dot-id
                  :field-id (:field-id field)
                  :x (:x dot) :y (:y dot)
                  :type (name (:type dot))}
@@ -71,6 +72,7 @@
   (let [saved-field (if (contains? field :field-id )
                       field
                       (create-game-field field game-id))]
+    (prn saved-field)
     (reduce save-dot saved-field (:dots saved-field))
     ))
 

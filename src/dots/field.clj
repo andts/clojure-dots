@@ -80,7 +80,7 @@
           destination-dots (get-neighbour-dots field dot)
           dot-index (util/get-next-index (:dots field))]
       (-> field
-        (assoc-in [:dots dot-index] dot)
+        (assoc-in [:dots dot-index] (assoc dot :dot-id dot-index))
         (assoc-in [:field-map [x y]] dot-index)
         (add-edges-to-field [x y] destination-dots))
       )
