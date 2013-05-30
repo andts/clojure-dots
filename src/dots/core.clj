@@ -9,8 +9,8 @@
 (defn create-game
   [player1-id player2-id width height]
   (let [game {:game-id (:GENERATED_KEY (db/create-game player1-id player2-id))
-              player1-id :red
-              player2-id :blue
+              :players {player1-id :red
+                        player2-id :blue}
               :field {:size {:width width
                              :height height}
                       }}]
@@ -31,7 +31,7 @@
   "Add new dot to game field"
   [game-id x y player-id]
   (let [game (get @games game-id)
-        field-with-dot (field/put-dot (:field game) {:x x :y y :type (get game player-id)})
+        field-with-dot (field/put-dot (:field game) {:x x :y y :type (get-in game [:players player-id])})
         new-game (assoc game :field field-with-dot)]
     (dosync
       (ref-set games (assoc @games (:game-id new-game) new-game)))

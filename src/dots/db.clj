@@ -44,17 +44,24 @@
 (defn- save-dot
   "Save dot in db, if it doesn't already exist"
   [field dot]
-  (k/insert dots
-    (k/modifier "IGNORE")
-    (k/values {:dot-id (:dot-id dot)
-               :field-id (:field-id field)
-               :x (:x dot) :y (:y dot)
-               :type (name (:type dot))}
-      )))
+  (do
+    (k/insert dots
+      (k/modifier "IGNORE")
+      (k/values {:dot-id (:dot-id dot)
+                 :field-id (:field-id field)
+                 :x (:x dot) :y (:y dot)
+                 :type (name (:type dot))}
+        ))
+    field
+    ))
 
 (defn- create-game-field
   [field game-id]
-  (let [new-field-id (:GENERATED_KEY (k/insert fields (k/values [{:width (:width field)} {:height (:height field)} {:game-id game-id}])))]
+  (let [new-field-id (:GENERATED_KEY (k/insert fields
+                                       (k/values [{:width (get-in field [:size :width ])
+                                                   :height (get-in field [:size :height ])
+                                                   :game-id game-id}])))
+        ]
     (assoc field :field-id new-field-id)
     ))
 
