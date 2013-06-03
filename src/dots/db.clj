@@ -29,15 +29,15 @@
   (k/pk :game-id )
   (k/entity-fields :player1-id :player2-id )
   (k/has-one fields {:fk :game-id})
-  (k/belongs-to players (:fk :player1-id ))
-  (k/belongs-to players (:fk :player2-id )))
+  (k/belongs-to players {:fk :player1-id})
+  (k/belongs-to players {:fk :player2-id}))
 
 (defn load-game-field
   "Get game field by game id"
   [game-id]
   (let [query-result (first (k/select games (k/with fields (k/with dots)) (k/where {:games.game-id game-id})))
         field-size {:width (:width query-result) :height (:height query-result)}
-        game-field {:size field-size}]
+        game-field {:size field-size :field-id (:field-id query-result)}]
     (reduce #(field/put-dot %1 {:x (:x %2) :y (:y %2) :type (keyword (:type %2))}) game-field (:dots query-result))
     ))
 
@@ -61,8 +61,7 @@
   (let [new-field-id (:GENERATED_KEY (k/insert fields
                                        (k/values [{:width (get-in field [:size :width ])
                                                    :height (get-in field [:size :height ])
-                                                   :game-id game-id}])))
-        ]
+                                                   :game-id game-id}])))]
     (assoc field :field-id new-field-id)
     ))
 
@@ -84,6 +83,15 @@
   "Update game in db: save field, history, etc."
   [game]
   (assoc game :field (save-game-field (:field game) (:game-id game))))
+
+(defn load-game
+  [game-id]
+  (k/select games
+    (k/raw "join players player1 on players.player-id = games.player1-id")
+;    (k/join :player1 (= :players.player-id :player1-id))
+;    (k/join :player2 (= :players.player-id :player2-id))
+    (k/where {:games.game-id game-id}))
+  )
 
 (defn create-player
   "Create new player"

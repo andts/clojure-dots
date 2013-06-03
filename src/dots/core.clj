@@ -34,13 +34,13 @@
 (defn put-dot
   "Add new dot to game field"
   [game-id x y player-id]
-  (let [game (get @games game-id)
-        field-with-dot (field/put-dot (:field game) {:x x :y y :type (get-in game [:players player-id])})
-        new-game (assoc game :field field-with-dot)]
-    (dosync
-      (ref-set games (assoc @games (:game-id new-game) new-game)))
-    new-game
-    ))
+  (if-let [game (get @games game-id)]
+    (let [field-with-dot (field/put-dot (:field game) {:x x :y y :type (get-in game [:players player-id])})
+          new-game (assoc game :field field-with-dot)]
+      (dosync
+        (ref-set games (assoc @games (:game-id new-game) new-game)))
+      new-game
+      )))
 
 (defn create-player
   "Create new player"
@@ -58,8 +58,7 @@
     (db/save-player player)
     (dosync
       (ref-set players (assoc @players (:id player) player))
-      player
-      )
+      player)
     ))
 
 (defn load-player
