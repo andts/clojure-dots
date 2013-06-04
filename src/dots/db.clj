@@ -86,12 +86,7 @@
 
 (defn load-game
   [game-id]
-  (k/select games
-    (k/raw "join players player1 on players.player-id = games.player1-id")
-;    (k/join :player1 (= :players.player-id :player1-id))
-;    (k/join :player2 (= :players.player-id :player2-id))
-    (k/where {:games.game-id game-id}))
-  )
+  (first (k/select games (k/where {:games.game-id game-id}))))
 
 (defn create-player
   "Create new player"

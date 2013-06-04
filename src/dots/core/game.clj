@@ -1,10 +1,9 @@
-(ns dots.core
-  (:require [dots.util :as util]
+(ns dots.core.game
+  (:require [dots.core.player :as player]
             [dots.field :as field]
             [dots.db :as db]))
 
 (def games (ref {}))
-(def players (ref {}))
 
 (defn create-game
   [player1-id player2-id width height]
@@ -29,7 +28,17 @@
 
 (defn load-game
   [game-id]
-  )
+  (if-let [game-data (db/load-game game-id)]
+    (player/load-player (:player1-id game-data))
+    (player/load-player (:player2-id game-data))
+    (let [game {:game-id (:game-id game-data)
+                :players {(:player1-id game-data) :red
+                          (:player2-id game-data) :blue}
+                :field (db/load-game-field game-id)}]
+      (dosync
+        (ref-set games (assoc @games (:game-id game) game)))
+      game
+      )))
 
 (defn put-dot
   "Add new dot to game field"
@@ -41,26 +50,3 @@
         (ref-set games (assoc @games (:game-id new-game) new-game)))
       new-game
       )))
-
-(defn create-player
-  "Create new player"
-  [name]
-  (let [player {:name name}
-        created-player (assoc player :id (:GENERATED_KEY (db/create-player player)))]
-    (dosync
-      (ref-set players (assoc @players (:id created-player) created-player)))
-    created-player
-    ))
-
-(defn save-player
-  [player]
-  (do
-    (db/save-player player)
-    (dosync
-      (ref-set players (assoc @players (:id player) player))
-      player)
-    ))
-
-(defn load-player
-  [player-id]
-  )
