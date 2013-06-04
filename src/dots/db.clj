@@ -99,5 +99,9 @@
   [player]
   (k/update players
     (k/set-fields {:name (:name player)})
-    (k/where (= :player-id (:id player)))
+    (k/where (= :player-id (:player-id player)))
     ))
+
+(defn load-player
+  [player-id]
+  (first (k/select players (k/where {:players.player-id player-id}))))
