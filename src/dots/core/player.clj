@@ -33,3 +33,4 @@
       player)
     ))
 
+(defn load-all-players [] (db/load-all-players))

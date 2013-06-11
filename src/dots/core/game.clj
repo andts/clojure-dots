@@ -44,6 +44,10 @@
         game
         ))))
 
+(defn get-all-games-for-player
+  [player-id]
+  (db/load-all-games-for-player player-id))
+
 (defn put-dot
   "Add new dot to game field"
   [game-id x y player-id]

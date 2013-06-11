@@ -88,6 +88,10 @@
   [game-id]
   (first (k/select games (k/where {:games.game-id game-id}))))
 
+(defn get-all-games-for-player
+  [player-id]
+  (k/select games (k/where (or (= :games.player1-id player-id) (= :games.player2-id player-id) ))))
+
 (defn create-player
   "Create new player"
   [player]
@@ -105,3 +109,5 @@
 (defn load-player
   [player-id]
   (first (k/select players (k/where {:players.player-id player-id}))))
+
+(defn load-all-players [] (k/select players))
