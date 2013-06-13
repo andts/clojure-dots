@@ -1,12 +1,22 @@
 (ns dots.web.ring
-  (:require [ring.adapter.jetty :as rj]
-            [compojure.core :as c]
+  (:require [compojure.core :as c]
+            [org.httpkit.server :as hk]
             [ring.middleware.params :as p]
             [ring.middleware.json :as json]
             [dots.core.player :as player]
-            [dots.core.game :as game]))
+            [dots.core.game :as game])
+  )
 
-(c/defroutes rest-routes
+(defn websocket-handler [request]
+  (hk/with-channel request channel
+    (hk/on-close channel (fn [status] (println "channel closed: " status)))
+    (hk/on-receive channel (fn [data]
+                          (do
+                            (println "received: " data)
+                            (hk/send! channel data))))
+    ))
+
+(c/defroutes dots-routes
   ;PLAYERS
   ;GET ALL PLAYERS
   (c/GET "/players" []
@@ -34,13 +44,15 @@
     {:status 200
      :headers {"Content-Type" "application/json"}
      :body (game/get-all-games-for-player player-id)})
+  ;STATIC TEST PAGE
+  (c/GET "/dots" [] websocket-handler)
   )
 
-(def dots-rest
-  (-> rest-routes
+(def dots-web
+  (-> dots-routes
     p/wrap-params
     json/wrap-json-params
     json/wrap-json-response
     ))
 
-(rj/run-jetty dots-rest {:port 8080})
+(hk/run-server dots-web {:port 8080})

@@ -8,6 +8,7 @@
                  [ring/ring-jetty-adapter "1.1.8"]
                  [ring/ring-json "0.2.0"]
                  [compojure "1.1.5"]
+                 [http-kit "2.1.4"]
                  [log4j "1.2.15" :exclusions [javax.mail/mail
                                               javax.jms/jms
                                               com.sun.jdmk/jmxtools
