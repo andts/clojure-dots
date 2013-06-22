@@ -9,6 +9,8 @@
                  [ring/ring-json "0.2.0"]
                  [compojure "1.1.5"]
                  [http-kit "2.1.4"]
+                 [org.clojure/data.json "0.2.2"]
+                 [org.clojure/core.match "0.2.0-beta3"]
                  [log4j "1.2.15" :exclusions [javax.mail/mail
                                               javax.jms/jms
                                               com.sun.jdmk/jmxtools
