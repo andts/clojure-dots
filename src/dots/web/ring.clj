@@ -1,6 +1,6 @@
 (ns dots.web.ring
   (:require [compojure.core :as c]
-            [clojure.core.match :as match]
+            [clojure.core.match :as m]
             [org.httpkit.server :as hk]
             [ring.middleware.params :as p]
             [clojure.data.json :as json]
@@ -15,45 +15,13 @@
                              (do
                                (println data)
                                (let [request-data (json/read-str data :key-fn keyword)
-                                     response (match/match [(:request request-data)]
+                                     response (m/match [(:request request-data)]
                                                 ["get-players"] (player/load-all-players)
                                                 ["get-player"] (player/load-player (:id request-data))
-                                                ;                               ["add-player"] ()
-                                                ;                               ["put-dot"] ()
-                                                ;                               ["get-players"] ()
                                                 )]
-                                 (println request-data)
-                                 (println response)
                                  (hk/send! channel (json/write-str response))))))))
 
 (c/defroutes dots-routes
-  ;PLAYERS
-  ;GET ALL PLAYERS
-  ;  (c/GET "/players" []
-  ;    {:status 200
-  ;     :headers {"Content-Type" "application/json"}
-  ;     :body (player/load-all-players)})
-  ;GET SPECIFIC PLAYER
-  ;  (c/GET "/players/:id" [id]
-  ;    {:status 200
-  ;     :headers {"Content-Type" "application/json"}
-  ;     :body (player/load-player id)})
-  ;CREATE NEW PLAYER
-  ;  (c/POST "/players" [name]
-  ;    {:status 200
-  ;     :headers {"Content-Type" "application/json"}
-  ;     :body (player/create-player name)})
-  ;GAMES
-  ;GET GAME BY ID
-  ;  (c/GET "/games/:id" [game-id]
-  ;    {:status 200
-  ;     :headers {"Content-Type" "application/json"}
-  ;     :body (game/load-game game-id)})
-  ;GET GAME BY PLAYER ID
-  ;  (c/GET "/games/by-player/:player" [player-id]
-  ;    {:status 200
-  ;     :headers {"Content-Type" "application/json"}
-  ;     :body (game/get-all-games-for-player player-id)})
   ;websocket entry point
   (c/GET "/d" [] websocket-handler))
 
