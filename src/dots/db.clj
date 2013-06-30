@@ -32,14 +32,19 @@
   (k/belongs-to players {:fk :player1-id})
   (k/belongs-to players {:fk :player2-id}))
 
+(k/defentity invites
+  (k/pk :invite-id )
+  (k/entity-fields :player1-id :player2-id :width :height )
+  (k/belongs-to players {:fk :player1-id})
+  (k/belongs-to players {:fk :player2-id}))
+
 (defn load-game-field
   "Get game field by game id"
   [game-id]
   (let [query-result (first (k/select games (k/with fields (k/with dots)) (k/where {:games.game-id game-id})))
         field-size {:width (:width query-result) :height (:height query-result)}
         game-field {:size field-size :field-id (:field-id query-result)}]
-    (reduce #(field/put-dot %1 {:x (:x %2) :y (:y %2) :type (keyword (:type %2))}) game-field (:dots query-result))
-    ))
+    (reduce #(field/put-dot %1 {:x (:x %2) :y (:y %2) :type (keyword (:type %2))}) game-field (:dots query-result))))
 
 (defn- save-dot
   "Save dot in db, if it doesn't already exist"
@@ -51,10 +56,8 @@
       (k/values {:dot-id dot-id
                  :field-id (:field-id field)
                  :x (:x dot) :y (:y dot)
-                 :type (name (:type dot))}
-        ))
-    field
-    ))
+                 :type (name (:type dot))}))
+    field))
 
 (defn- create-game-field
   [field game-id]
@@ -62,8 +65,7 @@
                                        (k/values [{:width (get-in field [:size :width ])
                                                    :height (get-in field [:size :height ])
                                                    :game-id game-id}])))]
-    (assoc field :field-id new-field-id)
-    ))
+    (assoc field :field-id new-field-id)))
 
 (defn- save-game-field
   "Save game field in db"
@@ -72,8 +74,7 @@
                       field
                       (create-game-field field game-id))]
     (prn saved-field)
-    (reduce save-dot saved-field (:dots saved-field))
-    ))
+    (reduce save-dot saved-field (:dots saved-field))))
 
 (defn create-game
   [player1 player2]
@@ -90,7 +91,7 @@
 
 (defn get-all-games-for-player
   [player-id]
-  (k/select games (k/where (or (= :games.player1-id player-id) (= :games.player2-id player-id) ))))
+  (k/select games (k/where (or (= :games.player1-id player-id) (= :games.player2-id player-id)))))
 
 (defn create-player
   "Create new player"
@@ -103,11 +104,14 @@
   [player]
   (k/update players
     (k/set-fields {:name (:name player)})
-    (k/where (= :player-id (:player-id player)))
-    ))
+    (k/where (= :player-id (:player-id player)))))
 
 (defn load-player
   [player-id]
   (first (k/select players (k/where {:players.player-id player-id}))))
 
 (defn load-all-players [] (k/select players))
+
+(defn create-invite [])
+
+(defn update-invite [])

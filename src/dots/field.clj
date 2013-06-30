@@ -27,8 +27,7 @@
         new-edge (list vertex1-id vertex2-id)
         new-edge-id (util/get-next-index (:edges field))
         field-with-new-edge (assoc-in field [:edges new-edge-id] new-edge)]
-    (reduce #(add-edge-to-adjacent-dot %1 %2 new-edge-id) field-with-new-edge new-edge)
-    ))
+    (reduce #(add-edge-to-adjacent-dot %1 %2 new-edge-id) field-with-new-edge new-edge)))
 
 (defn- add-edges-to-field
   "Add edges from source vertex to all destination vertices"
@@ -44,12 +43,11 @@
         width (get-in field [:size :width ])
         height (get-in field [:size :height ])]
     (cond
-      (and (contains? dot :id ) (contains? (:dots field) (:id dot))) (throw (IllegalArgumentException. "This dot already exists"));false ;dot has id set and a dot with same id already stored in field
+      (and (contains? dot :id ) (contains? (:dots field) (:id dot))) (throw (IllegalArgumentException. "This dot already exists")) ;false ;dot has id set and a dot with same id already stored in field
       (contains? field-map [x y]) (throw (IllegalArgumentException. "Dot with such coordinates already exists")) ;false ;a dot with same coordinates exists
       (or (> x width) (< x 1)) (throw (IllegalArgumentException. "Dot x coord is out of field")) ;false ;dot is out of field
       (or (> y height) (< y 1)) (throw (IllegalArgumentException. "Dot y coord is out of field")) ;false ;dot is out of field
-      :else true)
-    ))
+      :else true)))
 
 (defn- get-neighbour-dots
   "Return coordinates of all neighbour dots that have same colour"
@@ -63,10 +61,8 @@
                (contains? field-map %1)
                (let [dest-dot-id (field-map %1)
                      dest-dot (get (:dots field) dest-dot-id)]
-                 (= (dot :type ) (dest-dot :type ))
-                 ))
-      neighbour-coords)
-    ))
+                 (= (dot :type ) (dest-dot :type ))))
+      neighbour-coords)))
 
 (defn put-dot
   "Add a new dot with specified coordinates(1-based,
@@ -84,5 +80,4 @@
         (assoc-in [:field-map [x y]] dot-index)
         (add-edges-to-field [x y] destination-dots))
       )
-    field
-    ))
+    field))

@@ -14,8 +14,7 @@
   (let [proto-player {:name name}
         created-player (assoc proto-player :player-id (:GENERATED_KEY (db/create-player proto-player)))]
     (save-player-inmemory created-player)
-    created-player
-    ))
+    created-player))
 
 (defn save-player
   [player]
@@ -30,7 +29,6 @@
     (let [player {:player-id (:player-id player-data)
                   :name (:name player-data)}]
       (save-player-inmemory player)
-      player)
-    ))
+      player)))
 
 (defn load-all-players [] (db/load-all-players))

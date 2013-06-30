@@ -5,8 +5,7 @@
   [map]
   (if (empty? (keys map))
     1
-    (inc (apply max (keys map))))
-  )
+    (inc (apply max (keys map)))))
 
 (defn includes?
   "Check if collection coll contains the item"

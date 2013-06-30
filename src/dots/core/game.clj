@@ -4,6 +4,7 @@
             [dots.db :as db]))
 
 (def games (ref {}))
+(def invites (ref {}))
 
 (defn save-game-inmemory
   [game]
@@ -19,16 +20,14 @@
                              :height height}}
               }]
     (save-game-inmemory game)
-    game
-    ))
+    game))
 
 (defn save-game
   [game]
   (if-let [saved-game (db/save-game game)]
     (do
       (save-game-inmemory saved-game)
-      saved-game)
-    ))
+      saved-game)))
 
 (defn load-game
   [game-id]
@@ -41,8 +40,7 @@
                             (:player2-id game-data) :blue}
                   :field (db/load-game-field game-id)}]
         (save-game-inmemory game)
-        game
-        ))))
+        game))))
 
 (defn get-all-games-for-player
   [player-id]
@@ -55,5 +53,4 @@
     (let [field-with-dot (field/put-dot (:field game) {:x x :y y :type (get-in game [:players player-id])})
           new-game (assoc game :field field-with-dot)]
       (save-game-inmemory new-game)
-      new-game
-      )))
+      new-game)))

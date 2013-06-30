@@ -15,15 +15,15 @@
      (clojure.core.match/match [(:action ~'request)]
        ~@actions)))
 
+;Define routes to dispatch actions based on :action key in request
 (define-routes dots-ws-routes
-  "Define routes to dispatch actions based on :action key in request"
   ["get-players"] (player/load-all-players) ;get list of all players - why?
   ["get-player"] (player/load-player (:player-id request)) ;get player by id - get all info about a specific player
   ["create-player"] (player/create-player (:player-name request)) ;create new player
   ["update-player"] (player/save-player (:player-id request)) ;update player
   ["start-game"] () ;start a game from invite, delete invite
   ["put-dot"] (game/put-dot (:game-id request) (:x request) (:y request) (:player-id request)) ;put a new dot
-  ["save-game"] (game/save-game ((:game-id request) @game/games)) ;pause and save a game
+  ["save-game"] (game/save-game (get @game/games (:game-id request))) ;pause and save a game
   ["leave-game"] () ;leave a game, can't continue
   ["create-invite"] () ;create new invite for  game with current player
   ["get-invites"] () ;get a list of all invites with one player
