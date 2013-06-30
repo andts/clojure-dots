@@ -7,24 +7,40 @@
             [dots.core.player :as player]
             [dots.core.game :as game]))
 
-(defmacro process-request
+(defmacro define-routes
+  "Creates a function that will define routes"
   [fn-name & actions]
   `(defn ~fn-name
-     [~'request]
+     [~'request ~'channel]
      (clojure.core.match/match [(:action ~'request)]
        ~@actions)))
 
-(process-request route
-  ["get-players"] (player/load-all-players)
-  ["get-player"] (player/load-player (:id request)))
+(define-routes dots-ws-routes
+  "Define routes to dispatch actions based on :action key in request"
+  ["get-players"] (player/load-all-players) ;get list of all players - why?
+  ["get-player"] (player/load-player (:player-id request)) ;get player by id - get all info about a specific player
+  ["create-player"] (player/create-player (:player-name request)) ;create new player
+  ["update-player"] (player/save-player (:player-id request)) ;update player
+  ["start-game"] () ;start a game from invite, delete invite
+  ["put-dot"] (game/put-dot (:game-id request) (:x request) (:y request) (:player-id request)) ;put a new dot
+  ["save-game"] (game/save-game ((:game-id request) @game/games)) ;pause and save a game
+  ["leave-game"] () ;leave a game, can't continue
+  ["create-invite"] () ;create new invite for  game with current player
+  ["get-invites"] () ;get a list of all invites with one player
+  )
+
+(defn process-request
+  "Returns a fn that will process requests"
+  [request channel]
+  (fn [data]
+    (let [request-data (json/read-str data :key-fn keyword)
+          response (dots-ws-routes request-data channel)]
+      (hk/send! channel (json/write-str response)))))
 
 (defn websocket-handler [request]
   (hk/with-channel request channel
     (hk/on-close channel (fn [status] (println "channel closed: " status)))
-    (hk/on-receive channel (fn [data]
-                             (let [request-data (json/read-str data :key-fn keyword)
-                                   response (route request-data)]
-                               (hk/send! channel (json/write-str response)))))))
+    (hk/on-receive channel (process-request request channel))))
 
 (c/defroutes dots-routes
   ;websocket entry point
