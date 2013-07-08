@@ -112,6 +112,20 @@
 
 (defn load-all-players [] (k/select players))
 
-(defn create-invite [])
+(defn create-invite
+  "Create new invite"
+  [invite]
+  (k/insert invites
+    (k/values {:invite-id (:id invite) :width (:width invite) :height (:height invite) :player1-id (:player1-id invite)})))
 
-(defn update-invite [])
+(defn update-invite
+  "Update invite in db"
+  [invite]
+  (k/update invites
+    (k/set-fields {:width (:width invite) :height (:height invite) :player1-id (:player1-id invite) :player2-id (:player2-id invite)})
+    (k/where (= :invite-id (:invite-id invite)))))
+
+(defn delete-invite [invite]
+  "Delete invite from db"
+  (k/delete invites
+    (k/where (= :invite-id (:invite-id invite)))))

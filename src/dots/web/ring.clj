@@ -7,6 +7,25 @@
             [dots.core.player :as player]
             [dots.core.game :as game]))
 
+;create a map to store all rooms with channels
+(def rooms (atom {}))
+;add a channel to a room by id
+(defn add-channel-to-room
+  [room-id channel]
+  (let [new-room (if (contains? @rooms room-id)
+                   (cons channel (get @rooms room-id))
+                   (list channel))]
+    (swap! rooms identity new-room)
+    ))
+
+(defn add-to-list [coll item]
+  (if (contains? coll item)
+    (cons channel (get @rooms room-id))
+    (list channel))
+  )
+;end of map to store rooms
+
+
 (defmacro define-routes
   "Creates a function that will define routes"
   [fn-name & actions]
@@ -21,12 +40,12 @@
   ["get-player"] (player/load-player (:player-id request)) ;get player by id - get all info about a specific player
   ["create-player"] (player/create-player (:player-name request)) ;create new player
   ["update-player"] (player/save-player (:player-id request)) ;update player
-  ["start-game"] () ;start a game from invite, delete invite
+  ["start-game"] (game/create-game (:invite-id request)) ;start a game from invite, delete invite
   ["put-dot"] (game/put-dot (:game-id request) (:x request) (:y request) (:player-id request)) ;put a new dot
   ["save-game"] (game/save-game (get @game/games (:game-id request))) ;pause and save a game
   ["leave-game"] () ;leave a game, can't continue
-  ["create-invite"] () ;create new invite for  game with current player
-  ["get-invites"] () ;get a list of all invites with one player
+  ["create-invite"] (game/create-invite (:player-id request) (:width request) (:height request)) ;create new invite for  game with current player
+  ["get-invites"] (game/get-all-invites) ;get a list of all invites with one player
   )
 
 (defn process-request
