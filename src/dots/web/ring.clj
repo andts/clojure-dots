@@ -60,7 +60,13 @@
      (clojure.core.match/match [(:action ~'request)]
        ~@actions)))
 
+(defn broadcast-to-room
+  [room-id message]
+  (doseq [channel (get @rooms (keyword (str room-id)))]
+    (hk/send! channel message)))
+
 ;Define routes to dispatch actions based on :action key in request
+;has request and channel
 (define-routes dots-ws-routes
   ["get-players"] (player/load-all-players) ;get list of all players - why?
   ["get-player"] (player/load-player (:player-id request)) ;get player by id - get all info about a specific player
@@ -70,8 +76,10 @@
   ["put-dot"] (game/put-dot (:game-id request) (:x request) (:y request) (:player-id request)) ;put a new dot
   ["save-game"] (game/save-game (get @game/games (:game-id request))) ;pause and save a game
   ["leave-game"] () ;leave a game, can't continue
-  ["create-invite"] (game/create-invite (:player-id request) (:width request) (:height request)) ;create new invite for  game with current player
-  ["get-invites"] (game/get-all-invites) ;get a list of all invites with one player
+  ["create-invite"] ();(game/create-invite (:player-id request) (:width request) (:height request)) ;create new invite for  game with current player
+  ["get-invites"] ();(game/get-all-invites) ;get a list of all invites with one player
+  ["join-room"] (add-channel-to-room (:room-id request) channel) ;to join echo test room
+  ["send-message"] (broadcast-to-room (:room-id request) (:message request)) ;send smth to echo test room
   )
 
 (defn process-request
@@ -80,7 +88,8 @@
   (fn [data]
     (let [request-data (json/read-str data :key-fn keyword)
           response (dots-ws-routes request-data channel)]
-      (hk/send! channel (json/write-str response)))))
+;      (hk/send! channel (json/write-str response))
+      )))
 
 (defn websocket-handler [request]
   (hk/with-channel request channel

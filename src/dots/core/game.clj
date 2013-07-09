@@ -33,15 +33,18 @@
       game))
   ([invite-id]
     (let [invite (get @invites invite-id)
-          game {:game-id (:GENERATED_KEY (db/create-game (:player1-id invite) (:player2-idinvite )))
+          player1-id (:player1-id invite)
+          player2-id (:player2-id invite)
+          game {:game-id (:GENERATED_KEY (db/create-game player1-id player2-id))
                 :players {player1-id :red
                           player2-id :blue}
                 :field {:size {:width (:width invite)
                                :height (:height invite)}}
                 }]
       (dosync
-        (ref-set coll (assoc @coll (get item item-id-key) item))
-        (ref-set invites (dissoc @invites (get invite :invite-id ))))
+;        (ref-set invites (assoc @invites (get item item-id-key) item))
+;        (ref-set invites (dissoc @invites (get invite :invite-id )))
+        )
       game)))
 
 (defn save-game
@@ -78,25 +81,25 @@
       new-game)))
 
 ;create invites only inmemory for now
-(defn create-invite
-  [player-id width height]
-  (let [new-invite {:invite-id (util/get-next-index @invites)
-                    :player1-id player-id
-                    :width width
-                    :height height}]
-    (save-invite-inmemory new-invite)
-    new-invite))
-
-(defn get-all-invites [] @invites)
-
-(update-invite [invite]
-  (save-invite-inmemory invite))
-
-(defn remove-invite [invite-id]
-  (dosync
-    (ref-set invites (dissoc @invites (get invite :invite-id )))))
-
-(defn join-invite [invite-id player-id]
-  (if-not (contains? (get @invites invite-id) :player2-id )
-    (let [new-invite (assoc invite :player2-id player-id)]
-      (save-invite-inmemory new-invite))))
+;(defn create-invite
+;  [player-id width height]
+;  (let [new-invite {:invite-id (util/get-next-index @invites)
+;                    :player1-id player-id
+;                    :width width
+;                    :height height}]
+;    (save-invite-inmemory new-invite)
+;    new-invite))
+;
+;(defn get-all-invites [] @invites)
+;
+;(defn update-invite [invite]
+;  (save-invite-inmemory invite))
+;
+;(defn remove-invite [invite-id]
+;  (dosync
+;    (ref-set invites (dissoc @invites (get @invites :invite-id )))))
+;
+;(defn join-invite [invite-id player-id]
+;  (if-not (contains? (get @invites invite-id) :player2-id )
+;    (let [new-invite (assoc invite :player2-id player-id)]
+;      (save-invite-inmemory new-invite))))
