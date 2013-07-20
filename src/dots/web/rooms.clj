@@ -5,7 +5,7 @@
 ; rooms structure-
 ; room-id (equals game-id, but a keyword) to list of connected channels
 ; {
-;   :1(room-id) (ch1(some channel) ch2 ch3)
+;   :1/*room-id*/ (ch1/*some channel*/ ch2 ch3)
 ;   :2 (ch100 ch145)
 ;   :3 (ch27 ch35)
 ;   :4 (ch12 ch67 ch20 ch47)
@@ -31,21 +31,48 @@
 ; maybe extract this rooms "management" to a separate namespace - done
 
 ;managed synchronous storage for rooms
-(def rooms (atom {}))
+(def rooms (ref {}))
 
-; my own multimap...
-(defn add-to-multimap [map key item]
+;maps channels to rooms they participate in
+(def ch2room (ref {}))
+
+;my own multimap...
+;add another key-item pair
+(defn mm-put [map key item]
   (if (contains? map key)
     (assoc map key (cons item (get map key)))
     (assoc map key (list item))))
+;remove a value from list by key
+(defn mm-rem-val [map key item]
+  (if (contains? map key)
+    (assoc map key (remove #{item} (get map key)))))
+;remove a key from map
+(defn mm-rem-key [map key]
+  (if (contains? map key)
+    (dissoc map key)))
 
 ;add a channel to a room by id
 (defn add-channel-to-room
   [room-id channel]
-  (swap! rooms add-to-multimap (keyword (str room-id)) channel))
+  (dosync
+    (ref-set rooms (mm-put @rooms (keyword (str room-id)) channel))
+    (ref-set ch2room (mm-put @ch2room channel (keyword (str room-id))))))
 
-;add a channel to a room by id
+;TODO: TEST REMOVES!!!
+;remove a room and all its associations to existing channels
 (defn remove-room
   [room-id]
-  (swap! rooms dissoc (keyword (str room-id))))
+  (dosync
+    (let [room-id-kw (keyword (str room-id))]
+      (doseq [channel (get @rooms room-id-kw)]
+        (ref-set ch2room (mm-rem-val @ch2room channel room-id-kw)))
+      (ref-set rooms (mm-rem-key @rooms room-id-kw)))))
+
+;remove a channel from all rooms
+(defn remove-channel
+  [channel]
+  (dosync
+    (doseq [room-id-kw (get @ch2room channel)]
+      (ref-set rooms (mm-rem-val @rooms channel room-id-kw)))
+    (ref-set ch2room (mm-rem-key @ch2room channel))))
 ;end of map to store rooms
