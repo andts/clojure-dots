@@ -3,6 +3,7 @@
             [korma.db :as db]
             [dots.field :as field]
             [dots.util :as util]))
+;TODO remove dependency from dots.field!!!
 
 (def config (util/load-properties (clojure.java.io/resource "dots.properties")))
 

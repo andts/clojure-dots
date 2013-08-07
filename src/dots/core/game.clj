@@ -3,7 +3,11 @@
             [dots.field :as field]
             [dots.util :as util]
             [dots.db :as db]))
-
+;create separate namespaces for players and invites
+;structure
+; dots.games, dots.players, dots.invites
+; core.db(create separate ns for players, games, etc), core.field, core.util
+; web.server, web.rooms
 (def games (ref {}))
 (def invites (ref {}))
 
