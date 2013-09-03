@@ -61,7 +61,7 @@
                (contains? field-map %1)
                (let [dest-dot-id (field-map %1)
                      dest-dot (get (:dots field) dest-dot-id)]
-                 (= (dot :type ) (dest-dot :type ))))
+                 (= (:type dot) (:type dest-dot))))
       neighbour-coords)))
 
 (defn put-dot

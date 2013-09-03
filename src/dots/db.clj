@@ -3,7 +3,6 @@
             [korma.db :as db]
             [dots.field :as field]
             [dots.util :as util]))
-;TODO remove dependency from dots.field!!!
 
 (def config (util/load-properties (clojure.java.io/resource "dots.properties")))
 
@@ -39,13 +38,19 @@
   (k/belongs-to players {:fk :player1-id})
   (k/belongs-to players {:fk :player2-id}))
 
+;TODO this must be stripped down to only querying field data from db,
+; and the restoration of field object must be moved to game ns
 (defn load-game-field
   "Get game field by game id"
   [game-id]
   (let [query-result (first (k/select games (k/with fields (k/with dots)) (k/where {:games.game-id game-id})))
         field-size {:width (:width query-result) :height (:height query-result)}
         game-field {:size field-size :field-id (:field-id query-result)}]
-    (reduce #(field/put-dot %1 {:x (:x %2) :y (:y %2) :type (keyword (:type %2))}) game-field (:dots query-result))))
+    (reduce #(field/put-dot %1 {:x (:x %2)
+                                :y (:y %2)
+                                :type (keyword (:type %2))
+                                })
+      game-field (:dots query-result))))
 
 (defn- save-dot
   "Save dot in db, if it doesn't already exist"

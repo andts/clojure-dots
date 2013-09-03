@@ -5,6 +5,11 @@ Functional:
 3. No cycles detection, no scoring, just dots
 4. Everything is stored in mysql db
 
-Technical:
-1. Try slingshot (https://github.com/scgilardi/slingshot) for exceptions?
+TODO: remove dependency in db.clj from dots.field!!!
 
+TODO: ;create separate namespaces for players and invites
+
+TODO: ;change project structure to smth like
+TODO: ; dots.games, dots.players, dots.invites
+TODO: ; core.db(create separate ns for players, games, etc), core.field, core.util
+TODO: ; web.server, web.rooms
