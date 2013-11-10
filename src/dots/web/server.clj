@@ -4,7 +4,6 @@
             [org.httpkit.server :as hk]
             [ring.middleware.params :as p]
             [clojure.data.json :as json]
-            [dots.web.rooms :as rooms]
             [dots.core.game :as game]
             [dots.core.player :as player]))
 
