@@ -1,4 +1,4 @@
-(ns clj-wamp-example.main
+(ns dots.web.main
   (:gen-class )
   (:use [clojure.tools.logging :only [info]]
         [clojure.tools.cli :only [cli]]
@@ -31,7 +31,8 @@
     (reset! server
       ;        (run-server (if (:dots.server.hot-reload cfg) (wrap-reload (app)) (app)) server-cfg)) TODO research how wrap-reload works and its profits
       (run-server (app) server-cfg))
-    (info "server started. listen on" (:ip server-cfg) "@" (:port server-cfg))))
+    (info "server started. listen on" (:ip server-cfg) "@" (:port server-cfg)))
+  )
 
 (defn -main [& args]
   (let [[options _ banner]

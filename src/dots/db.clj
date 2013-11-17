@@ -4,6 +4,7 @@
             [dots.field :as field]
             [dots.util :as util]))
 
+;todo move these two functions to web.main in start server
 (def config (util/load-properties (clojure.java.io/resource "dots.properties")))
 
 (db/defdb db (db/mysql {:host (:dots.db.host config)

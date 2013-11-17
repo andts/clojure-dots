@@ -28,6 +28,7 @@
                           player2-id :blue}
                 :field {:size {:width width
                                :height height}}
+                :state :initiated
                 }]
       (save-game-inmemory game)
       game))
@@ -41,10 +42,10 @@
                 :field {:size {:width (:width invite)
                                :height (:height invite)}}
                 }]
-;      (dosync
-;        (ref-set invites (assoc @invites (get item item-id-key) item))
-;        (ref-set invites (dissoc @invites (get invite :invite-id )))
-;        )
+      ;      (dosync
+      ;        (ref-set invites (assoc @invites (get item item-id-key) item))
+      ;        (ref-set invites (dissoc @invites (get invite :invite-id )))
+      ;        )
       game)))
 
 (defn save-game
