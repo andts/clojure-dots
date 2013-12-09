@@ -7,37 +7,37 @@
 ;todo move these two functions to web.main in start server
 (def config (util/load-properties (clojure.java.io/resource "dots.properties")))
 
-(db/defdb db (db/mysql {:host (:dots.db.host config)
-                        :port (:dots.db.port config)
-                        :db "dots"
-                        :user (:dots.db.user config)
+(db/defdb db (db/mysql {:host     (:dots.db.host config)
+                        :port     (:dots.db.port config)
+                        :db       "dots"
+                        :user     (:dots.db.user config)
                         :password (:dots.db.password config)}))
 
 (k/defentity players
-  (k/pk :player-id )
-  (k/entity-fields :name ))
+             (k/pk :player-id)
+             (k/entity-fields :name :anon))
 
 (k/defentity dots
-  (k/pk :dot-id )
-  (k/entity-fields :x :y :type ))
+             (k/pk :dot-id)
+             (k/entity-fields :x :y :type))
 
 (k/defentity fields
-  (k/pk :field-id )
-  (k/entity-fields :width :height )
-  (k/has-many dots {:fk :field-id}))
+             (k/pk :field-id)
+             (k/entity-fields :width :height)
+             (k/has-many dots {:fk :field-id}))
 
 (k/defentity games
-  (k/pk :game-id )
-  (k/entity-fields :player1-id :player2-id )
-  (k/has-one fields {:fk :game-id})
-  (k/belongs-to players {:fk :player1-id})
-  (k/belongs-to players {:fk :player2-id}))
+             (k/pk :game-id)
+             (k/entity-fields :player1-id :player2-id)
+             (k/has-one fields {:fk :game-id})
+             (k/belongs-to players {:fk :player1-id})
+             (k/belongs-to players {:fk :player2-id}))
 
 (k/defentity invites
-  (k/pk :invite-id )
-  (k/entity-fields :player1-id :player2-id :width :height )
-  (k/belongs-to players {:fk :player1-id})
-  (k/belongs-to players {:fk :player2-id}))
+             (k/pk :invite-id)
+             (k/entity-fields :player1-id :player2-id :width :height)
+             (k/belongs-to players {:fk :player1-id})
+             (k/belongs-to players {:fk :player2-id}))
 
 ;TODO this must be stripped down to only querying field data from db,
 ; and the restoration of field object must be moved to game ns
@@ -47,11 +47,10 @@
   (let [query-result (first (k/select games (k/with fields (k/with dots)) (k/where {:games.game-id game-id})))
         field-size {:width (:width query-result) :height (:height query-result)}
         game-field {:size field-size :field-id (:field-id query-result)}]
-    (reduce #(field/put-dot %1 {:x (:x %2)
-                                :y (:y %2)
-                                :type (keyword (:type %2))
-                                })
-      game-field (:dots query-result))))
+    (reduce #(field/put-dot %1 {:x    (:x %2)
+                                :y    (:y %2)
+                                :type (keyword (:type %2))})
+            game-field (:dots query-result))))
 
 (defn- save-dot
   "Save dot in db, if it doesn't already exist"
@@ -59,25 +58,25 @@
   (let [dot (second dot-entry)
         dot-id (first dot-entry)]
     (k/insert dots
-      (k/modifier "IGNORE")
-      (k/values {:dot-id dot-id
-                 :field-id (:field-id field)
-                 :x (:x dot) :y (:y dot)
-                 :type (name (:type dot))}))
+              (k/modifier "IGNORE")
+              (k/values {:dot-id   dot-id
+                         :field-id (:field-id field)
+                         :x        (:x dot) :y (:y dot)
+                         :type     (name (:type dot))}))
     field))
 
 (defn- create-game-field
   [field game-id]
   (let [new-field-id (:GENERATED_KEY (k/insert fields
-                                       (k/values [{:width (get-in field [:size :width ])
-                                                   :height (get-in field [:size :height ])
-                                                   :game-id game-id}])))]
+                                               (k/values [{:width   (get-in field [:size :width])
+                                                           :height  (get-in field [:size :height])
+                                                           :game-id game-id}])))]
     (assoc field :field-id new-field-id)))
 
 (defn- save-game-field
   "Save game field in db"
   [field game-id]
-  (let [saved-field (if (contains? field :field-id )
+  (let [saved-field (if (contains? field :field-id)
                       field
                       (create-game-field field game-id))]
     (prn saved-field)
@@ -104,35 +103,18 @@
   "Create new player"
   [player]
   (k/insert players
-    (k/values {:name (:name player)})))
+            (k/values {:name (:name player) :anon (:anon player)})))
 
 (defn save-player
   "Update existing player"
   [player]
-  (k/update players
-    (k/set-fields {:name (:name player)})
-    (k/where (= :player-id (:player-id player)))))
+  (if (contains? player :player-id)
+    (k/update players
+              (k/set-fields {:name (:name player) :anon (:anon player)})
+              (k/where (= :player-id (:player-id player))))))
 
 (defn load-player
   [player-id]
   (first (k/select players (k/where {:players.player-id player-id}))))
 
 (defn load-all-players [] (k/select players))
-
-(defn create-invite
-  "Create new invite"
-  [invite]
-  (k/insert invites
-    (k/values {:invite-id (:id invite) :width (:width invite) :height (:height invite) :player1-id (:player1-id invite)})))
-
-(defn update-invite
-  "Update invite in db"
-  [invite]
-  (k/update invites
-    (k/set-fields {:width (:width invite) :height (:height invite) :player1-id (:player1-id invite) :player2-id (:player2-id invite)})
-    (k/where (= :invite-id (:invite-id invite)))))
-
-(defn delete-invite [invite]
-  "Delete invite from db"
-  (k/delete invites
-    (k/where (= :invite-id (:invite-id invite)))))

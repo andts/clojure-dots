@@ -9,14 +9,15 @@
     (ref-set players (assoc @players (:player-id player) player))))
 
 (defn create-player
-  "Create new player"
-  [name]
-  (let [proto-player {:name name}
+  "Create new player and return new generated id"
+  [name anon]
+  (let [proto-player {:name name :anon anon}
         created-player (assoc proto-player :player-id (:GENERATED_KEY (db/create-player proto-player)))]
     (save-player-inmemory created-player)
     created-player))
 
 (defn save-player
+  "Save existing player inmemory and in db"
   [player]
   (do
     (db/save-player player)
