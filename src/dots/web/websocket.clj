@@ -71,6 +71,9 @@
   (game/load-game)
   @game/games)
 
+(defn join-game []
+  )
+
 ;; Main http-kit/WAMP WebSocket handler
 (defn wamp-handler
   "Returns a http-kit websocket handler with wamp subprotocol"
@@ -80,10 +83,10 @@
                                                  {:on-open      ws-on-open
                                                   :on-close     ws-on-close
                                                   :on-call      {create-game-url   create-game
-                                                                 ;join-game-url     join-game
+                                                                 join-game-url     join-game
                                                                  register-url      register-player
                                                                  get-all-games-url get-all-games
-                                                                 ;get-game-info-url get-detailed-game-info
+                                                                 get-game-info-url get-detailed-game-info
                                                                  }
                                                   :on-subscribe subscribe-callbacks
                                                   :on-publish   publish-callbacks})))

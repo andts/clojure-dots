@@ -99,6 +99,9 @@
   [player-id]
   (k/select games (k/where (or (= :games.player1-id player-id) (= :games.player2-id player-id)))))
 
+(defn get-all-games []
+  (k/select games))
+
 (defn create-player
   "Create new player"
   [player]
