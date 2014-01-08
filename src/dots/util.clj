@@ -26,3 +26,8 @@
     (let [props (java.util.Properties.)]
       (.load props reader)
       (into {} (for [[k v] props] [(keyword k) (read-string v)])))))
+
+(defn save-inmemory
+  [coll item-id-key item]
+  (dosync
+    (alter coll assoc (get item item-id-key) item)))

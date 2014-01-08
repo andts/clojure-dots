@@ -1,12 +1,12 @@
 (ns dots.core.player
-  (:require [dots.db :as db]))
+  (:require [dots.db :as db]
+            [dots.util :as util]))
 
 (def players (ref {}))
 
 (defn save-player-inmemory
   [player]
-  (dosync
-    (ref-set players (assoc @players (:player-id player) player))))
+  (util/save-inmemory players :player-id player))
 
 (defn create-player
   "Create new player and return new generated id"

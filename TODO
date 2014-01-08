@@ -1,15 +1,59 @@
-First Simple Draft of Dots
-Functional:
-1. Two players, two types of dots - red and blue
-2. Fixed size field
-3. No cycles detection, no scoring, just dots
-4. Everything is stored in mysql db
-
 TODO: remove dependency in db.clj from dots.field!!!
 
-TODO: ;create separate namespaces for players and invites
+TWO ANON PLAYERS PLAY JOIN A GAME
+---------------------------------
+1.  player 1 opens websocket channel (autobahn)
+2.  player 1 gets player id from server and stores it as a cookie (rpc, register)
+3.  player 1 subscribes to allGames channel (pubsub, allGames)
+4.  player 2 opens websocket channel (autobahn)
+5.  player 2 gets player id from server and stores it as a cookie (rpc, register)
+6.  player 2 subscribes to allGames channel (pubsub, allGames)
+7.  player 1 creates invite with settings: name "super game", field 20x20, color: red (rpc, createGame)
+8.  player 1 receives response with new invite id and subscribes to channel invite-id (pubsub, invite-id)
+9.  player 2 receives a message with new invite from allGames topic (pubsub, allGames)
+10. player 2 joins invite (subscribe to channel invite-id) (rpc, joinGame; pubsub, invite-id)
+11. player 1 receives a message that player 2 joined (pubsub, invite-id)
+12. player 2 sets ready state (rpc, playerReady)
+13. player 1 receives message that player 2 is ready (pubsub, invite-id)
+14. player 1 starts game (rpc, startGame)
+15. player 1 and player 2 receive message with game id (pubsub, invite-id),
+    unsubscribe from invite-id channel (pubsub, invite-id)
+    and subscribe to game-id channel (pubsub, game-id)
 
-TODO: ;change project structure to smth like
-TODO: ; dots.games, dots.players, dots.invites
-TODO: ; core.db(create separate ns for players, games, etc), core.field, core.util
-TODO: ; web.server, web.rooms
+METHOD DESCRIPTIONS:
+register: V
+    create new anon player in db
+    if string passed as param - set it as name
+    return his id and name
+createGame: V
+    game settings passed as json object
+    create new invite with settings
+    create new topic with invite-id name
+    send invite to allGames as json object
+    return invite as json object
+joinGame: V
+    params - invite-id, player-id
+    finds invite by id, sets player2-id = player-id, changes state to full
+    sends updated invite as json object to topic invite-id
+    sends updated invite (only id and state) as json object to topic allGames (client will remove it from list, because state is full)
+    returns invite as json object
+playerReady: V
+    params - invite-id, player-id
+    finds invite by id, checks if player is in game, changes state to starting
+    sends updated invite as json object to topic invite-id
+    returns invite as json object
+startGame: V
+    params - invite-id, player-id
+    finds invite by id, checks if player is in game
+    create game with params from invite
+    create topic game-id
+    changes invite state to closed, sets created game id to invite
+    sends updated invite as json object to topic invite-id
+    returns invite as json object
+
+THOUGHTS ON TESTING:
+1. Write a websocket client in clojure/java - sucks, need wamp client also, but high level of automation...
+2. Use WAMP Testbed - ok to test one method at a time, but not whole scenario
+    (think about automation configuration? or at least a way to configure "method calls" and call them later quickly :)
+3. Write a custom page for scenario that will act as a player, with a couple of buttons and input fields, and a console-like textarea for responses - will try this one...
+4. ???
