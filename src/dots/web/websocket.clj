@@ -10,7 +10,7 @@
 ;topic urls
 (def ws-base-url "http://dots/")
 (def call-base-url (str ws-base-url ""))
-(def topic-base-url (str ws-base-url "/topic/"))
+(def topic-base-url (str ws-base-url "topic/"))
 
 (defn call-url [path] (str call-base-url path))
 (defn topic-url [path] (str topic-base-url path))
@@ -42,7 +42,7 @@
 
 (defn send-games-list [session-id topic]
   (when (= topic invites-list-url)
-    (w/emit-event! topic @game/games (list session-id))))
+    (w/emit-event! topic @invite/invites (list session-id))))
 
 ;define callbacks for default topics (only game-list for now)
 (def publish-callbacks (ref {invites-list-url pass-through}))
@@ -62,22 +62,29 @@
   (let [{:keys [p1Id p1Name p1Color width height name filter]} (clojure.walk/keywordize-keys game-settings)
         new-invite (invite/create-invite p1Id name width height p1Color filter)
         id (:invite-id new-invite)
-        player (get @player/players p1Id)]
+        player (get @player/players p1Id)
+        sess-id w/*call-sess-id*]
+    (log/info "New Invite: " new-invite)
     (when-not (= (:name player) p1Name)
       (player/save-player (assoc player :name p1Name)))
     (create-topic id)
-    (w/send-event! invites-list-url new-invite)
+    (log/info "Send event: " new-invite)
+    (w/broadcast-event! invites-list-url new-invite sess-id)
+    (log/info "Event sent...")
     new-invite))
 
-(defn register-player [name]
-  (player/create-player (if (clojure.string/blank? name) "Anonymous" name) true))
+(defn register-player
+  ([]
+   (player/create-player "Anonymous" true))
+  ([name]
+   (player/create-player name true)))
 
 (defn get-all-invites []
   ;(game/load-game)
   ;@game/games
   )
 
-(defn join-invite [params] ;change to separate params when wamp web test tool will support it
+(defn join-invite [params] ;TODO change to separate params when wamp web test tool will support it
   (let [{:keys [inviteId playerId]} (clojure.walk/keywordize-keys params)
         updated-invite (invite/join-invite inviteId playerId)]
     (w/send-event! inviteId updated-invite)
@@ -85,13 +92,13 @@
                                      :state     (updated-invite :state)})
     updated-invite))
 
-(defn player-ready [params] ;change to separate params when wamp web test tool will support it
+(defn player-ready [params] ;TODO change to separate params when wamp web test tool will support it
   (let [{:keys [inviteId playerId]} (clojure.walk/keywordize-keys params)
         updated-invite (invite/set-player-ready inviteId playerId)]
     (w/send-event! inviteId updated-invite)
     updated-invite))
 
-(defn start-game [params]
+(defn start-game [params] ;TODO change to separate params when wamp web test tool will support it
   (let [{:keys [inviteId playerId]} (clojure.walk/keywordize-keys params)
         new-game (game/create-game inviteId)
         updated-invite (get @invite/invites inviteId)

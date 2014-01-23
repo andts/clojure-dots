@@ -17,4 +17,4 @@
                                               javax.jms/jms
                                               com.sun.jdmk/jmxtools
                                               com.sun.jmx/jmxri]]]
-  :main dots.core.game)
+  :main dots.web.main)
