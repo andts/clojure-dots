@@ -60,12 +60,12 @@
 (defn join-invite
   "Try to join an invite. If it's :state is :open - joins and returns the invite,
   otherwise - returns false."
-  [invite-id player]
+  [invite-id player-id]
   (dosync
     (when-let [invite (get @invites invite-id)]
       (when (= (invite :state) :open)
         (do
-          (save-invite-inmemory (assoc invite :player2-id (player :player-id) :state :full)))))))
+          (save-invite-inmemory (assoc invite :player2-id player-id :state :full)))))))
 
 (defn leave-invite
   "Leave invite. If player is the author - remove invite entirely,
