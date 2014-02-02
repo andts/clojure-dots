@@ -23,6 +23,7 @@
 (def join-invite-url (call-url "joinInvite"))
 (def player-ready-url (call-url "playerReady"))
 (def start-game-url (call-url "startGame"))
+(def get-player-info-url (call-url "getPlayerInfo"))
 
 (def get-all-invites-url (call-url "getAllInvites"))
 
@@ -56,12 +57,12 @@
     (ref-set publish-callbacks (assoc @publish-callbacks name pass-through))
     name))
 
-(defn create-invite [game-settings]
+(defn create-invite [invite-data]
   ;consider topic name == game-id
-  (log/info "Create invite for settings: " game-settings)
-  (let [{:keys [p1Id p1Name p1Color width height name filter]} (clojure.walk/keywordize-keys game-settings)
-        new-invite (invite/create-invite p1Id name width height p1Color filter)
-        id (:invite-id new-invite)
+  (log/info "Create invite for settings: " invite-data)
+  (let [{:keys [gameInfo searchFilter]} (clojure.walk/keywordize-keys invite-data)
+        new-invite (invite/create-invite (player1 :id) (player1 :name) "artem.kovalenko.944" name width height player1Color filter)
+        id (:inviteId new-invite)
         player (get @player/players p1Id)
         sess-id w/*call-sess-id*]
     (log/info "New Invite: " new-invite)
@@ -69,7 +70,7 @@
       (player/save-player (assoc player :name p1Name)))
     (create-topic id)
     (log/info "Send event: " new-invite)
-    (w/broadcast-event! invites-list-url new-invite sess-id)
+    (w/broadcast-event! invites-list-url {(:inviteId new-invite) new-invite} sess-id)
     (log/info "Event sent...")
     new-invite))
 
@@ -88,8 +89,8 @@
   (let [{:keys [inviteId playerId]} (clojure.walk/keywordize-keys params)
         updated-invite (invite/join-invite inviteId playerId)]
     (w/send-event! inviteId updated-invite)
-    (w/send-event! invites-list-url {:invite-id (updated-invite :invite-id)
-                                     :state     (updated-invite :state)})
+    (w/send-event! invites-list-url {:inviteId (updated-invite :invite-id)
+                                     :state    (updated-invite :state)})
     updated-invite))
 
 (defn player-ready [params] ;TODO change to separate params when wamp web test tool will support it
@@ -106,6 +107,12 @@
     (w/send-event! inviteId updated-invite)
     updated-invite))
 
+(defn get-player-info [player-id]
+  (dosync
+    (if-let [player-info (get @player/players player-id)]
+      player-info
+      (player/load-player player-id))))
+
 ; Main http-kit/WAMP WebSocket handler
 (defn wamp-handler
   "Returns a http-kit websocket handler with wamp subprotocol"
@@ -119,7 +126,7 @@
                                                                  join-invite-url     join-invite
                                                                  player-ready-url    player-ready
                                                                  start-game-url      start-game
-                                                                 get-all-invites-url get-all-invites
-                                                                 }
+                                                                 get-player-info-url get-player-info
+                                                                 get-all-invites-url get-all-invites}
                                                   :on-subscribe subscribe-callbacks
                                                   :on-publish   publish-callbacks})))

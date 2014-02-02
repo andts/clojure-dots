@@ -8,7 +8,7 @@
 (def invites
   "invite structure
   {
-    :invite-id     123
+    :inviteId     123
     :name          \"super-game\"
     :width         10
     :height        10
@@ -26,20 +26,16 @@
 
 (defn save-invite-inmemory
   [invite]
-  (util/save-inmemory invites :invite-id invite)
+  (util/save-inmemory invites :inviteId invite)
   invite)
 
 (defn create-invite
-  [player-id name width height color filter]
+  [gameInfo filter]
   (dosync
-    (let [invite {:invite-id     (util/get-next-index @invites)
-                  :name          name
-                  :width         width
-                  :height        height
-                  :player1-id    player-id
-                  :player1-color color
-                  :search-filter filter
-                  :state         :open}]
+    (let [invite {:inviteId     (util/get-next-index @invites)
+                  :gameInfo     gameInfo
+                  :searchFilter filter
+                  :state        :open}]
       (save-invite-inmemory invite))))
 
 (defn filter-matches? [filter player]
