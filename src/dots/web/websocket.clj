@@ -61,7 +61,9 @@
   ;consider topic name == game-id
   (log/info "Create invite for settings: " invite-data)
   (let [{:keys [gameInfo searchFilter]} (clojure.walk/keywordize-keys invite-data)
-        new-invite (invite/create-invite (player1 :id) (player1 :name) "artem.kovalenko.944" name width height player1Color filter)
+        player-id (get-in gameInfo [:player1 :id])
+        player-info (player/load-player player-id)
+        new-invite (invite/create-invite gameInfo searchFilter player-info)
         id (:inviteId new-invite)
         player (get @player/players p1Id)
         sess-id w/*call-sess-id*]

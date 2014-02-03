@@ -52,7 +52,7 @@
   ([invite-id]
    (dosync
      (when-let [invite (get @invite/invites invite-id)]
-       (when (= (invite :state) :starting)
+       (when (= (invite :state) :STARTING)
          (let [game {:game-id (:GENERATED_KEY (db/create-game (invite :player1-id) (invite :player2-id)))
                      :players {(invite :player1-id) (invite :player1-color)
                                (invite :player2-id) (if (= (invite :player1-color) :red) :blue :red)}
@@ -61,7 +61,7 @@
                      :state   :started
                      }]
            (save-game-inmemory game)
-           (invite/save-invite-inmemory (assoc invite :state :closed :game-id (game :game-id)))
+           (invite/save-invite-inmemory (assoc invite :state :CLOSED :game-id (game :game-id)))
            game))))))
 
 (defn save-game

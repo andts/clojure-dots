@@ -9,18 +9,28 @@
   "invite structure
   {
     :inviteId     123
-    :name          \"super-game\"
-    :width         10
-    :height        10
-    :player1-id    123 ;author's id
-    :player1-color #{:red :blue}
-    :player2-id    123 ;opponent's id
-    :state         #{:open :full :starting :closed}
-    :game-id       123 ;after both players ready and invite is closed
-    :search-filter {:player-id 123 ;if we want to play with exact player
-                    :skill     5 ;if we wanr to play with player of some skill level
-                    :region    \"ukr\" ;if we want to play with player from some country (http://en.wikipedia.org/wiki/ISO_3166-1_alpha-3)
+    :gameInfo     {
+                    :name          \" super-game \"
+                    :width         10
+                    :height        10
+                    :player1       {:id          123
+                                    :name        \"John\"
+                                    :avatar      \"ololo.jpg\"
+                                    :skill       5
+                                    :region      \"ukr\"
+                                    :facebookUid \"aaa.324\"
+                                    }
+                    :player2       {
+                                     ;same as player1
+                                     }
+                    :player1-color #{:red :blue}
                     }
+    :state        #{:OPEN :FULL :STARTING :CLOSED}
+    :gameId       123 ;after both players ready and invite is closed
+    :searchFilter {:playerId 123 ;if we want to play with exact player
+                   :skill    5 ;if we wanr to play with player of some skill level
+                   :region   \"ukr\" ;if we want to play with player from some country (http://en.wikipedia.org/wiki/ISO_3166-1_alpha-3)
+                   }
     }"
   (ref {}))
 
@@ -30,52 +40,52 @@
   invite)
 
 (defn create-invite
-  [gameInfo filter]
+  [gameInfo filter player1-info]
   (dosync
     (let [invite {:inviteId     (util/get-next-index @invites)
-                  :gameInfo     gameInfo
+                  :gameInfo     (assoc gameInfo :player1 player1-info)
                   :searchFilter filter
-                  :state        :open}]
+                  :state        :OPEN}]
       (save-invite-inmemory invite))))
 
 (defn filter-matches? [filter player]
-  "Check if search filter matches player"
+  " Check if search filter matches player "
   (let [conditions (keys filter)
         comparison (clojure.data/diff filter player)
         matching (nthnext comparison 2)]
     (and (= (count conditions) (count matching)))))
 
 (defn find-invites
-  "Find invites with search-filter matching current players skill or region
-  (or other possible conditions in future) and :state :open"
+  " Find invites with search-filter matching current players skill or region
+  (or other possible conditions in future) and :state :OPEN "
   [player]
   (dosync
-    (filter (fn [invite] (and (filter-matches? (invite :search-filter) player) (= (invite :state) :open)))
+    (filter (fn [invite] (and (filter-matches? (invite :search-filter) player) (= (invite :state) :OPEN)))
             @invites)))
 
 (defn join-invite
-  "Try to join an invite. If it's :state is :open - joins and returns the invite,
-  otherwise - returns false."
+  " Try to join an invite. If it's :state is :OPEN - joins and returns the invite,
+  otherwise - returns false. "
   [invite-id player-id]
   (dosync
     (when-let [invite (get @invites invite-id)]
-      (when (= (invite :state) :open)
+      (when (= (invite :state) :OPEN)
         (do
-          (save-invite-inmemory (assoc invite :player2-id player-id :state :full)))))))
+          (save-invite-inmemory (assoc invite :player2-id player-id :state :FULL)))))))
 
 (defn leave-invite
-  "Leave invite. If player is the author - remove invite entirely,
-  if player is opponent - clear the field and change :state back to :open."
+  " Leave invite. If player is the author - remove invite entirely,
+  if player is opponent - clear the field and change :state back to :OPEN. "
   [invite-id player-id]
   (dosync
     ;...
     ))
 
 (defn set-player-ready
-  "Change invite :state to :starting"
+  " Change invite :state to :starting "
   [invite-id player-id]
   (dosync
     (when-let [invite (get @invites invite-id)]
-      (when (and (= (invite :state) :open) (or (= (invite :player1-id) player-id) (= (invite :player2-id) player-id)))
+      (when (and (= (invite :state) :OPEN) (or (= (invite :player1-id) player-id) (= (invite :player2-id) player-id)))
         (do
-          (save-invite-inmemory (assoc invite :state :starting)))))))
+          (save-invite-inmemory (assoc invite :state :STARTING)))))))
