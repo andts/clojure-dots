@@ -23,7 +23,7 @@
                     :player2       {
                                      ;same as player1
                                      }
-                    :player1-color #{:red :blue}
+                    :player1Color #{:RED :BLUE}
                     }
     :state        #{:OPEN :FULL :STARTING :CLOSED}
     :gameId       123 ;after both players ready and invite is closed
@@ -49,14 +49,14 @@
       (save-invite-inmemory invite))))
 
 (defn filter-matches? [filter player]
-  " Check if search filter matches player "
+  "Check if search filter matches player "
   (let [conditions (keys filter)
         comparison (clojure.data/diff filter player)
         matching (nthnext comparison 2)]
     (and (= (count conditions) (count matching)))))
 
 (defn find-invites
-  " Find invites with search-filter matching current players skill or region
+  "Find invites with search-filter matching current players skill or region
   (or other possible conditions in future) and :state :OPEN "
   [player]
   (dosync
@@ -64,17 +64,18 @@
             @invites)))
 
 (defn join-invite
-  " Try to join an invite. If it's :state is :OPEN - joins and returns the invite,
+  "Try to join an invite. If it's :state is :OPEN - joins and returns the invite,
   otherwise - returns false. "
   [invite-id player-id]
   (dosync
     (when-let [invite (get @invites invite-id)]
       (when (= (invite :state) :OPEN)
-        (do
-          (save-invite-inmemory (assoc invite :player2-id player-id :state :FULL)))))))
+        (let [player2-info (get @player/players player-id)
+              invite-w-player-info (assoc-in invite [:gameInfo :player2] player2-info)]
+          (save-invite-inmemory (assoc invite-w-player-info :state :FULL)))))))
 
 (defn leave-invite
-  " Leave invite. If player is the author - remove invite entirely,
+  "Leave invite. If player is the author - remove invite entirely,
   if player is opponent - clear the field and change :state back to :OPEN. "
   [invite-id player-id]
   (dosync
@@ -82,7 +83,7 @@
     ))
 
 (defn set-player-ready
-  " Change invite :state to :starting "
+  "Change invite :state to :starting "
   [invite-id player-id]
   (dosync
     (when-let [invite (get @invites invite-id)]

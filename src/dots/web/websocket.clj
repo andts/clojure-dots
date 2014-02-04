@@ -61,16 +61,17 @@
   ;consider topic name == game-id
   (log/info "Create invite for settings: " invite-data)
   (let [{:keys [gameInfo searchFilter]} (clojure.walk/keywordize-keys invite-data)
+        invite-player-name (get-in gameInfo [:player1 :name])
         player-id (get-in gameInfo [:player1 :id])
-        player-info (player/load-player player-id)
+        current-player-info (get @player/players player-id)
+        player-info (if (= invite-player-name (:name current-player-info))
+                      current-player-info
+                      (player/save-player (assoc current-player-info :name invite-player-name)))
         new-invite (invite/create-invite gameInfo searchFilter player-info)
-        id (:inviteId new-invite)
-        player (get @player/players p1Id)
+        invite-id (:inviteId new-invite)
         sess-id w/*call-sess-id*]
     (log/info "New Invite: " new-invite)
-    (when-not (= (:name player) p1Name)
-      (player/save-player (assoc player :name p1Name)))
-    (create-topic id)
+    (create-topic invite-id)
     (log/info "Send event: " new-invite)
     (w/broadcast-event! invites-list-url {(:inviteId new-invite) new-invite} sess-id)
     (log/info "Event sent...")
@@ -91,7 +92,7 @@
   (let [{:keys [inviteId playerId]} (clojure.walk/keywordize-keys params)
         updated-invite (invite/join-invite inviteId playerId)]
     (w/send-event! inviteId updated-invite)
-    (w/send-event! invites-list-url {:inviteId (updated-invite :invite-id)
+    (w/send-event! invites-list-url {:inviteId (updated-invite :inviteId)
                                      :state    (updated-invite :state)})
     updated-invite))
 
