@@ -111,13 +111,13 @@
 (defn save-player
   "Update existing player"
   [player]
-  (if (contains? player :player-id)
+  (if (contains? player :id)
     (k/update players
               (k/set-fields {:name (:name player) :anon (:anon player)})
-              (k/where (= :player-id (:player-id player))))))
+              (k/where (= :player-id (:id player))))))
 
 (defn load-player
   [player-id]
-  (first (k/select players (k/where {:players.player-id player-id}))))
+  (clojure.set/rename-keys (first (k/select players (k/where {:players.player-id player-id}))) {:player-id :id}))
 
 (defn load-all-players [] (k/select players))
