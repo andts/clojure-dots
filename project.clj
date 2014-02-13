@@ -8,7 +8,7 @@
                  [ring/ring-json "0.2.0"]
                  [compojure "1.1.5"]
                  [http-kit "2.1.16"]
-                 [clj-wamp "1.0.0-dyn-topic"]
+                 [clj-wamp "1.0.0_dyn-topic_keyword-params"]
                  [org.clojure/tools.logging "0.2.6"]
                  [org.clojure/tools.cli "0.2.2"]
                  [org.clojure/data.json "0.2.2"]

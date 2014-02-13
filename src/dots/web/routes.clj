@@ -10,7 +10,7 @@
 ;Application routes
 (defroutes server-routes
   (GET "/" [:as req]
-    {:status 200 :body "<html><body><center>This is not the page you are looking for.</center></body></html>"})
+    {:status 200 :body "<html><head><title>Jedi master says:</title></head><body><center>This is not the page you are looking for.</center></body></html>"})
   (GET "/ws" [:as req] (wamp-handler req)))
 
 ;Ring middleware
