@@ -53,8 +53,8 @@
 (defn create-topic [name]
   (dosync
     (log/info "Create topic for new game: " name)
-    (ref-set subscribe-callbacks (assoc @subscribe-callbacks name true))
-    (ref-set publish-callbacks (assoc @publish-callbacks name pass-through))
+    (alter subscribe-callbacks assoc name true)
+    (alter publish-callbacks assoc name pass-through)
     name))
 
 (defn create-invite [{game-info :gameInfo search-filter :searchFilter :as invite-data}]
@@ -70,9 +70,9 @@
         invite-id (:inviteId new-invite)
         sess-id w/*call-sess-id*]
     (log/info "New Invite: " new-invite)
-    (create-topic invite-id)
+    (create-topic (topic-url invite-id))
     (log/info "Send event: " new-invite)
-    (w/broadcast-event! invites-list-url {(:inviteId new-invite) new-invite} sess-id)
+    (w/broadcast-event! invites-list-url {(:inviteId new-invite) new-invite} (list sess-id))
     (log/info "Event sent...")
     new-invite))
 
@@ -90,7 +90,7 @@
 (defn join-invite [{:keys [inviteId playerId] :as params}]
   (let [updated-invite (invite/join-invite inviteId playerId)
         sess-id w/*call-sess-id*]
-    (w/send-event! inviteId updated-invite)
+    (w/send-event! (topic-url inviteId) updated-invite)
     (w/broadcast-event! invites-list-url
                         {:inviteId (updated-invite :inviteId)
                          :state    (updated-invite :state)}
@@ -99,14 +99,14 @@
 
 (defn player-ready [{:keys [inviteId playerId] :as params}]
   (let [updated-invite (invite/set-player-ready inviteId playerId)]
-    (w/send-event! inviteId updated-invite)
+    (w/send-event! (topic-url inviteId) updated-invite)
     updated-invite))
 
 (defn start-game [{:keys [inviteId playerId] :as params}]
   (let [new-game (game/create-game inviteId)
         updated-invite (get @invite/invites inviteId)
         id (new-game :game-id)]
-    (w/send-event! inviteId updated-invite)
+    (w/send-event! (topic-url inviteId) updated-invite)
     updated-invite))
 
 (defn get-player-info [player-id]
