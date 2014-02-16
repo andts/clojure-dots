@@ -87,26 +87,26 @@
   ;@game/games
   )
 
-(defn join-invite [{:keys [inviteId playerId] :as params}]
-  (let [updated-invite (invite/join-invite inviteId playerId)
+(defn join-invite [{invite-id :inviteId player-id :playerId :as params}]
+  (let [updated-invite (invite/join-invite invite-id player-id)
         sess-id w/*call-sess-id*]
-    (w/send-event! (topic-url inviteId) updated-invite)
+    (w/send-event! (topic-url invite-id) updated-invite)
     (w/broadcast-event! invites-list-url
                         {:inviteId (updated-invite :inviteId)
                          :state    (updated-invite :state)}
                         sess-id)
     updated-invite))
 
-(defn player-ready [{:keys [inviteId playerId] :as params}]
-  (let [updated-invite (invite/set-player-ready inviteId playerId)]
-    (w/send-event! (topic-url inviteId) updated-invite)
+(defn player-ready [{invite-id :inviteId player-id :playerId :as params}]
+  (let [updated-invite (invite/set-player-ready invite-id player-id)]
+    (w/send-event! (topic-url invite-id) updated-invite)
     updated-invite))
 
-(defn start-game [{:keys [inviteId playerId] :as params}]
-  (let [new-game (game/create-game inviteId)
-        updated-invite (get @invite/invites inviteId)
+(defn start-game [{invite-id :inviteId player-id :playerId :as params}]
+  (let [new-game (game/create-game invite-id)
+        updated-invite (get @invite/invites invite-id)
         id (new-game :game-id)]
-    (w/send-event! (topic-url inviteId) updated-invite)
+    (w/send-event! (topic-url invite-id) updated-invite)
     updated-invite))
 
 (defn get-player-info [player-id]
@@ -127,7 +127,7 @@
                                                                  register-url        register-player
                                                                  join-invite-url     join-invite
                                                                  player-ready-url    player-ready
-                                                                 start-game-url      start-game
+                                                                 ;start-game-url      start-game
                                                                  get-player-info-url get-player-info
                                                                  get-all-invites-url get-all-invites}
                                                   :on-subscribe subscribe-callbacks

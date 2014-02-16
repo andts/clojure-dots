@@ -1,5 +1,6 @@
 (ns dots.core.invites
   (:require [dots.core.player :as player]
+            [dots.core.game :as game]
             [dots.field :as field]
             [dots.util :as util]
             [dots.db :as db]
@@ -82,11 +83,29 @@
     ;...
     ))
 
+(def ready-state-changes {:FULL     :STARTING
+                          :STARTING :CLOSED})
+
+(defn- update-invite-ready [invite-id player-id]
+  (dosync
+    (when-let [invite (get @invites invite-id)]
+      (when (or (= (get-in invite [:gameInfo :player1 :id]) player-id)
+                (= (get-in invite [:gameInfo :player2 :id]) player-id))
+        (save-invite-inmemory (assoc invite :state (get ready-state-changes (invite :state))))))))
+
+;TODO: 1)add flags in invite to check which player is already READY
+
+;TODO: 2)think about how to move db i/o out of transaction:
+;TODO: first change the state of invite in transaction, to prevent
+;TODO: concurrent modification of invite. after transaction, if invite
+;TODO: is :CLOSED - call create game
 (defn set-player-ready
   "Change invite :state to :starting "
   [invite-id player-id]
-  (dosync
-    (when-let [invite (get @invites invite-id)]
-      (when (and (= (invite :state) :OPEN) (or (= (invite :player1-id) player-id) (= (invite :player2-id) player-id)))
-        (do
-          (save-invite-inmemory (assoc invite :state :STARTING)))))))
+  (let [updated-invite (update-invite-ready invite-id player-id)]
+    (if (= (updated-invite :state) :CLOSED)
+      (let [new-game (game/create-game updated-invite)
+            invite-w-game (assoc updated-invite :game-id (new-game :game-id))]
+        (save-invite-inmemory invite-w-game))
+      updated-invite)))
+

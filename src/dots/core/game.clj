@@ -1,6 +1,5 @@
 (ns dots.core.game
   (:require [dots.core.player :as player]
-            [dots.core.invites :as invite]
             [dots.field :as field]
             [dots.util :as util]
             [dots.db :as db]))
@@ -49,20 +48,21 @@
                }]
      (save-game-inmemory game)
      game))
-  ([invite-id]
-   (dosync
-     (when-let [invite (get @invite/invites invite-id)]
-       (when (= (invite :state) :STARTING)
-         (let [game {:game-id (:GENERATED_KEY (db/create-game (invite :player1-id) (invite :player2-id)))
-                     :players {(invite :player1-id) (invite :player1-color)
-                               (invite :player2-id) (if (= (invite :player1-color) :red) :blue :red)}
-                     :field   {:size {:width  (invite :width)
-                                      :height (invite :height)}}
-                     :state   :started
-                     }]
-           (save-game-inmemory game)
-           (invite/save-invite-inmemory (assoc invite :state :CLOSED :game-id (game :game-id)))
-           game))))))
+  ([invite]
+   (when (= (invite :state) :CLOSED)
+     (let [player1-id (get-in invite [:gameInfo :player1 :id])
+           player2-id (get-in invite [:gameInfo :player2 :id])
+           player1-color (get-in invite [:gameInfo :player1Color])
+           player2-color (if (= player1-color :RED) :BLUE :RED)
+           game {:game-id (:GENERATED_KEY (db/create-game player1-id player2-id))
+                 :players {player1-id player1-color
+                           player2-id player2-color}
+                 :field   {:size {:width  (get-in invite [:gameInfo :width])
+                                  :height (get-in invite [:gameInfo :height])}}
+                 :state   :STARTED
+                 }]
+       (save-game-inmemory game)
+       game))))
 
 (defn save-game
   [game]
