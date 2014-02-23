@@ -21,9 +21,7 @@
                                     :region      \"ukr\"
                                     :facebookUid \"aaa.324\"
                                     }
-                    :player2       {
-                                     ;same as player1
-                                     }
+                    :player2       {;same as player1}
                     :player1Color #{:RED :BLUE}
                     }
     :state        #{:OPEN :FULL :STARTING :CLOSED}
@@ -93,12 +91,7 @@
                 (= (get-in invite [:gameInfo :player2 :id]) player-id))
         (save-invite-inmemory (assoc invite :state (get ready-state-changes (invite :state))))))))
 
-;TODO: 1)add flags in invite to check which player is already READY
-
-;TODO: 2)think about how to move db i/o out of transaction:
-;TODO: first change the state of invite in transaction, to prevent
-;TODO: concurrent modification of invite. after transaction, if invite
-;TODO: is :CLOSED - call create game
+;TODO: add flags in invite to check which player is already READY
 (defn set-player-ready
   "Change invite :state to :starting "
   [invite-id player-id]

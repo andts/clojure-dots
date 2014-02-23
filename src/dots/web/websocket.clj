@@ -98,15 +98,9 @@
     updated-invite))
 
 (defn player-ready [{invite-id :inviteId player-id :playerId :as params}]
-  (let [updated-invite (invite/set-player-ready invite-id player-id)]
-    (w/send-event! (topic-url invite-id) updated-invite)
-    updated-invite))
-
-(defn start-game [{invite-id :inviteId player-id :playerId :as params}]
-  (let [new-game (game/create-game invite-id)
-        updated-invite (get @invite/invites invite-id)
-        id (new-game :game-id)]
-    (w/send-event! (topic-url invite-id) updated-invite)
+  (let [updated-invite (invite/set-player-ready invite-id player-id)
+        sess-id w/*call-sess-id*]
+    (w/broadcast-event! (topic-url invite-id) updated-invite sess-id)
     updated-invite))
 
 (defn get-player-info [player-id]
