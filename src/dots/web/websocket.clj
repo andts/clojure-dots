@@ -17,7 +17,7 @@
 
 (def invites-list-url (topic-url "allInvites"))
 
-;actions
+;rpc actions
 (def register-url (call-url "register"))
 (def change-name-url (call-url "changeName"))
 (def create-invite-url (call-url "createInvite"))
@@ -28,8 +28,9 @@
 (def start-game-url (call-url "startGame"))
 (def get-player-info-url (call-url "getPlayerInfo"))
 (def get-invite-info-url (call-url "getInviteInfo"))
-
 (def get-all-invites-url (call-url "getAllInvites"))
+(def put-dot-url (call-url "putDot"))
+(def add-loop-url (call-url "addLoop"))
 
 (defn ws-on-open
   "Log new user connected"
@@ -41,18 +42,12 @@
   [sess-id status]
   (log/info "Websocket client disconnected [" sess-id "] " status))
 
-;TODO fix publish callbacks to support passing events through
-(defn pass-through [sess-id topic event exclude eligible]
-  [sess-id topic event exclude eligible])
-
 (defn send-games-list [session-id topic]
   (when (= topic invites-list-url)
     (w/emit-event! topic @invite/invites (list session-id))))
 
-;define callbacks for default topics (only game-list for now)
-(def publish-callbacks (ref {invites-list-url pass-through}))
-(def subscribe-callbacks (ref {invites-list-url true
-                               :on-after        send-games-list}))
+;forward declaration of default topics
+(declare subscribe-callbacks publish-callbacks pass-through)
 
 (defn create-topic [name]
   (dosync
@@ -133,11 +128,46 @@
   (dosync
     (get @invite/invites invite-id)))
 
+(defn put-dot [player-id game-id x y]
+  (dosync
+    (let
+        [updated-game (game/put-dot game-id x y player-id)
+         sess-id w/*call-sess-id*]
+      (w/broadcast-event! (topic-url game-id) updated-game sess-id)
+      updated-game)))
+
+(defn add-loop [player-id game-id dots]
+  {:response "Not yet implemented"})
+
+;TODO: authentication logic goes here
 (defn auth-permissions-fn [sess-id auth-key]
   {:all true})
 
 (defn auth-secret-fn [sess-id auth-key auth-extra]
   nil)
+
+;define WAMP calls/topics
+(def rpc-actions {create-invite-url    create-invite
+                  register-url         register-player
+                  change-name-url      change-name
+                  join-invite-url      join-invite
+                  leave-invite-url     leave-invite
+                  player-ready-url     player-ready
+                  player-not-ready-url player-not-ready
+                  get-player-info-url  get-player-info
+                  get-invite-info-url  get-invite-info
+                  put-dot-url          put-dot
+                  add-loop-url         add-loop
+                  get-all-invites-url  get-all-invites})
+
+;TODO fix publish callbacks to support passing events through
+(defn pass-through [sess-id topic event exclude eligible]
+  [sess-id topic event exclude eligible])
+
+;define callbacks for default topics (only invite-list for now)
+(def publish-callbacks (ref {invites-list-url pass-through}))
+(def subscribe-callbacks (ref {invites-list-url true
+                               :on-after        send-games-list}))
 
 ; Main http-kit/WAMP WebSocket handler
 (defn wamp-handler
@@ -147,16 +177,7 @@
                              (w/http-kit-handler channel
                                                  {:on-open      ws-on-open
                                                   :on-close     ws-on-close
-                                                  :on-call      {create-invite-url    create-invite
-                                                                 register-url         register-player
-                                                                 change-name-url      change-name
-                                                                 join-invite-url      join-invite
-                                                                 leave-invite-url     leave-invite
-                                                                 player-ready-url     player-ready
-                                                                 player-not-ready-url player-not-ready
-                                                                 get-player-info-url  get-player-info
-                                                                 get-invite-info-url  get-invite-info
-                                                                 get-all-invites-url  get-all-invites}
+                                                  :on-call      rpc-actions
                                                   :on-subscribe subscribe-callbacks
                                                   :on-publish   publish-callbacks
                                                   :on-auth      {:allow-anon? true
