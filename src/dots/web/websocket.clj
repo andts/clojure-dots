@@ -17,13 +17,17 @@
 
 (def invites-list-url (topic-url "allInvites"))
 
-;pre-game actions
+;actions
 (def register-url (call-url "register"))
+(def change-name-url (call-url "changeName"))
 (def create-invite-url (call-url "createInvite"))
 (def join-invite-url (call-url "joinInvite"))
+(def leave-invite-url (call-url "leaveInvite"))
 (def player-ready-url (call-url "playerReady"))
+(def player-not-ready-url (call-url "playerNotReady"))
 (def start-game-url (call-url "startGame"))
 (def get-player-info-url (call-url "getPlayerInfo"))
+(def get-invite-info-url (call-url "getInviteInfo"))
 
 (def get-all-invites-url (call-url "getAllInvites"))
 
@@ -82,6 +86,11 @@
   ([name]
    (player/create-player name true)))
 
+(defn change-name
+  [player-id player-name]
+  (let [player-info (get @player/players player-id)]
+    (player/save-player (assoc player-info :name player-name))))
+
 (defn get-all-invites []
   ;(game/load-game)
   ;@game/games
@@ -97,17 +106,38 @@
                         sess-id)
     updated-invite))
 
+(defn leave-invite [{invite-id :inviteId player-id :playerId :as params}]
+  (let [updated-invite (invite/leave-invite invite-id player-id)
+        sess-id w/*call-sess-id*]
+    (w/send-event! (topic-url invite-id) updated-invite)
+    (w/broadcast-event! invites-list-url updated-invite sess-id)
+    updated-invite))
+
 (defn player-ready [{invite-id :inviteId player-id :playerId :as params}]
   (let [updated-invite (invite/set-player-ready invite-id player-id)
         sess-id w/*call-sess-id*]
     (w/broadcast-event! (topic-url invite-id) updated-invite sess-id)
     updated-invite))
 
+(defn player-not-ready [{invite-id :inviteId player-id :playerId :as params}]
+  (let [updated-invite (invite/set-player-not-ready invite-id player-id)
+        sess-id w/*call-sess-id*]
+    (w/broadcast-event! (topic-url invite-id) updated-invite sess-id)
+    updated-invite))
+
 (defn get-player-info [player-id]
   (dosync
-    (if-let [player-info (get @player/players player-id)]
-      player-info
-      (player/load-player player-id))))
+    (player/get-player player-id)))
+
+(defn get-invite-info [invite-id]
+  (dosync
+    (get @invite/invites invite-id)))
+
+(defn auth-permissions-fn [sess-id auth-key]
+  {:all true})
+
+(defn auth-secret-fn [sess-id auth-key auth-extra]
+  nil)
 
 ; Main http-kit/WAMP WebSocket handler
 (defn wamp-handler
@@ -117,12 +147,19 @@
                              (w/http-kit-handler channel
                                                  {:on-open      ws-on-open
                                                   :on-close     ws-on-close
-                                                  :on-call      {create-invite-url   create-invite
-                                                                 register-url        register-player
-                                                                 join-invite-url     join-invite
-                                                                 player-ready-url    player-ready
-                                                                 ;start-game-url      start-game
-                                                                 get-player-info-url get-player-info
-                                                                 get-all-invites-url get-all-invites}
+                                                  :on-call      {create-invite-url    create-invite
+                                                                 register-url         register-player
+                                                                 change-name-url      change-name
+                                                                 join-invite-url      join-invite
+                                                                 leave-invite-url     leave-invite
+                                                                 player-ready-url     player-ready
+                                                                 player-not-ready-url player-not-ready
+                                                                 get-player-info-url  get-player-info
+                                                                 get-invite-info-url  get-invite-info
+                                                                 get-all-invites-url  get-all-invites}
                                                   :on-subscribe subscribe-callbacks
-                                                  :on-publish   publish-callbacks})))
+                                                  :on-publish   publish-callbacks
+                                                  :on-auth      {:allow-anon? true
+                                                                 :timeout     10000
+                                                                 :secret      auth-secret-fn
+                                                                 :permissions auth-permissions-fn}})))

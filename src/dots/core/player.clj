@@ -27,9 +27,20 @@
 (defn load-player
   [player-id]
   (if-let [player-data (db/load-player player-id)]
-    (let [player {:id (:id player-data)
-                  :name (:name player-data)}]
+    (let [player {:id          (:id player-data)
+                  :name        (:name player-data)
+                  :anon        (:anon player-data)
+                  :region      (:region player-data)
+                  :skill       (:skill player-data)
+                  :avatar      (:avatar player-data)
+                  :facebookUid (:facebookUid player-data)
+                  }]
       (save-player-inmemory player)
       player)))
+
+(defn get-player [player-id]
+  (if-let [player-info (get @players player-id)]
+    player-info
+    (load-player player-id)))
 
 (defn load-all-players [] (db/load-all-players))

@@ -27,7 +27,8 @@
              ;list of cycles, where cycle is a list of edge ids that create a cycle
              :cycles    '()}
 
-    :state   #{:started :finished :closed}
+    :state   #{:STARTED :FINISHED :CLOSED}
+
   }"
   (ref {}))
 
@@ -74,8 +75,8 @@
   [game-id]
   (if-let [game-data (db/load-game game-id)]
     (do
-      (player/load-player (:player1-id game-data))
-      (player/load-player (:player2-id game-data))
+      (player/get-player (:player1-id game-data))
+      (player/get-player (:player2-id game-data))
       (let [game {:game-id (:game-id game-data)
                   :players {(:player1-id game-data) :red
                             (:player2-id game-data) :blue}

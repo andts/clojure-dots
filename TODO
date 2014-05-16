@@ -1,5 +1,8 @@
 TODO: remove dependency in db.clj from dots.field!!!
 
+TODO: on register(or on auth in future) save mapping of playerId to websocket session
+TODO: on all calls involving playerId check that sent playerId corresponds with the websocket session
+
 TWO ANON PLAYERS PLAY JOIN A GAME
 ---------------------------------
 1.  player 1 opens websocket channel (autobahn)
